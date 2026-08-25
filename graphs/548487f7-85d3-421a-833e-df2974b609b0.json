@@ -1,0 +1,240 @@
+{
+  "id": "548487f7-85d3-421a-833e-df2974b609b0",
+  "name": "Akte Hasskoeter",
+  "createdAt": "2026-08-25T18:11:37.422Z",
+  "updatedAt": "2026-08-25T18:52:59.356Z",
+  "nodeCount": 8,
+  "nodes": [
+    {
+      "id": "4fd4034f-e55d-4f4e-a534-01cb7b4113ba",
+      "type": "groupNode",
+      "position": {
+        "x": -1080,
+        "y": -1980
+      },
+      "width": 844,
+      "height": 903,
+      "data": {
+        "label": "James Zimmerschlüssel",
+        "hidden": false
+      },
+      "measured": {
+        "width": 844,
+        "height": 903
+      },
+      "selected": true,
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "9009b55f-b634-4934-add4-bc1c7db590e0",
+      "type": "puzzleNode",
+      "position": {
+        "x": 40.80064348254837,
+        "y": 72.80040146850479
+      },
+      "data": {
+        "label": "Vogelnest",
+        "kind": "puzzle"
+      },
+      "measured": {
+        "width": 168,
+        "height": 80
+      },
+      "selected": false,
+      "dragging": false,
+      "parentId": "4fd4034f-e55d-4f4e-a534-01cb7b4113ba",
+      "extent": "parent",
+      "expandParent": true,
+      "hidden": false
+    },
+    {
+      "id": "1922a18d-8c16-493f-9488-ed529f65407b",
+      "type": "puzzleNode",
+      "position": {
+        "x": 40.80064348254837,
+        "y": 237.8004014685048
+      },
+      "data": {
+        "label": "Singen",
+        "kind": "puzzle"
+      },
+      "measured": {
+        "width": 168,
+        "height": 80
+      },
+      "selected": false,
+      "dragging": false,
+      "parentId": "4fd4034f-e55d-4f4e-a534-01cb7b4113ba",
+      "extent": "parent",
+      "expandParent": true,
+      "hidden": false
+    },
+    {
+      "id": "9d803dc0-33c3-499b-9493-5233c8e12e19",
+      "type": "puzzleNode",
+      "position": {
+        "x": 40.80064348254837,
+        "y": 402.8004014685048
+      },
+      "data": {
+        "label": "Küken",
+        "kind": "item"
+      },
+      "measured": {
+        "width": 168,
+        "height": 80
+      },
+      "selected": false,
+      "dragging": false,
+      "parentId": "4fd4034f-e55d-4f4e-a534-01cb7b4113ba",
+      "extent": "parent",
+      "expandParent": true,
+      "hidden": false
+    },
+    {
+      "id": "b8b8c592-ed6b-4e0f-94b5-96940102d504",
+      "type": "puzzleNode",
+      "position": {
+        "x": 310.80064348254837,
+        "y": 102.80040146850479
+      },
+      "data": {
+        "label": "Küken säubern",
+        "kind": "puzzle"
+      },
+      "measured": {
+        "width": 168,
+        "height": 80
+      },
+      "selected": false,
+      "dragging": false,
+      "parentId": "4fd4034f-e55d-4f4e-a534-01cb7b4113ba",
+      "extent": "parent",
+      "expandParent": true,
+      "hidden": false
+    },
+    {
+      "id": "766dd7be-3017-4582-9e11-492a19eff251",
+      "type": "puzzleNode",
+      "position": {
+        "x": 325.80064348254837,
+        "y": 507.8004014685048
+      },
+      "data": {
+        "label": "Katze fängt Küken",
+        "kind": "location"
+      },
+      "measured": {
+        "width": 168,
+        "height": 80
+      },
+      "selected": false,
+      "dragging": false,
+      "parentId": "4fd4034f-e55d-4f4e-a534-01cb7b4113ba",
+      "extent": "parent",
+      "expandParent": true,
+      "hidden": false
+    },
+    {
+      "id": "41d968fd-5376-4547-9e6f-2f6938895b4b",
+      "type": "puzzleNode",
+      "position": {
+        "x": 475.80064348254837,
+        "y": 672.8004014685048
+      },
+      "data": {
+        "label": "James bewusstlos",
+        "kind": "location"
+      },
+      "measured": {
+        "width": 168,
+        "height": 80
+      },
+      "selected": false,
+      "dragging": false,
+      "parentId": "4fd4034f-e55d-4f4e-a534-01cb7b4113ba",
+      "extent": "parent",
+      "expandParent": true,
+      "hidden": false
+    },
+    {
+      "id": "4efe2214-02b8-4fbe-868f-e89e1560af90",
+      "type": "puzzleNode",
+      "position": {
+        "x": 70.80064348254837,
+        "y": 687.8004014685048
+      },
+      "data": {
+        "label": "James Zimmerschlüssel",
+        "kind": "item"
+      },
+      "measured": {
+        "width": 183,
+        "height": 80
+      },
+      "selected": false,
+      "dragging": false,
+      "parentId": "4fd4034f-e55d-4f4e-a534-01cb7b4113ba",
+      "extent": "parent",
+      "expandParent": true,
+      "hidden": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "15fb7366-b6ac-480f-b9ed-dea1906061de",
+      "source": "9009b55f-b634-4934-add4-bc1c7db590e0",
+      "target": "1922a18d-8c16-493f-9488-ed529f65407b",
+      "type": "smoothstep",
+      "selected": false,
+      "sourceHandle": "bottom",
+      "targetHandle": "top"
+    },
+    {
+      "id": "43ac9653-aa99-4eac-8189-41831739cd78",
+      "source": "1922a18d-8c16-493f-9488-ed529f65407b",
+      "target": "9d803dc0-33c3-499b-9493-5233c8e12e19",
+      "type": "smoothstep",
+      "selected": false,
+      "sourceHandle": "bottom",
+      "targetHandle": "top"
+    },
+    {
+      "id": "a381086f-f021-4bd1-b6f9-128c38488027",
+      "source": "9d803dc0-33c3-499b-9493-5233c8e12e19",
+      "target": "b8b8c592-ed6b-4e0f-94b5-96940102d504",
+      "type": "smoothstep",
+      "selected": false,
+      "sourceHandle": "bottom",
+      "targetHandle": "top"
+    },
+    {
+      "id": "2789b571-aa20-43f6-8867-4c265292df4a",
+      "source": "b8b8c592-ed6b-4e0f-94b5-96940102d504",
+      "target": "766dd7be-3017-4582-9e11-492a19eff251",
+      "type": "smoothstep",
+      "selected": false,
+      "sourceHandle": "bottom",
+      "targetHandle": "top"
+    },
+    {
+      "id": "a28d8f89-7bb6-490e-8cef-8b475bb1284c",
+      "source": "766dd7be-3017-4582-9e11-492a19eff251",
+      "target": "41d968fd-5376-4547-9e6f-2f6938895b4b",
+      "type": "smoothstep",
+      "selected": false,
+      "sourceHandle": "bottom",
+      "targetHandle": "top"
+    },
+    {
+      "id": "25f76b29-4d6d-491c-bc56-3130368fee58",
+      "source": "41d968fd-5376-4547-9e6f-2f6938895b4b",
+      "target": "4efe2214-02b8-4fbe-868f-e89e1560af90",
+      "type": "smoothstep",
+      "selected": false,
+      "sourceHandle": "bottom",
+      "targetHandle": "top"
+    }
+  ]
+}
