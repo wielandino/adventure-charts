@@ -43,11 +43,13 @@ export function PuzzleNode({ id, data, selected }: NodeProps<PuzzleFlowNode>) {
           <UnlinkIcon size={12} />
         </span>
       )}
-      <Handle type="target" position={Position.Top} />
+      <Handle type="target" position={Position.Top} id="top" />
+      <Handle type="target" position={Position.Left} id="left" />
       <div className="puzzle-node-kind">{style.label}</div>
       <div className="puzzle-node-label">{data.label}</div>
       {data.description && <div className="puzzle-node-description">{data.description}</div>}
-      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Bottom} id="bottom" />
+      <Handle type="source" position={Position.Right} id="right" />
     </div>
   )
 }

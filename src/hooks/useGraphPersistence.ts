@@ -28,7 +28,16 @@ export function useGraphPersistence(
         if (cancelled) return
         setName(graph.name)
         setNodes(graph.nodes)
-        setEdges(graph.edges)
+        // Edges saved before PuzzleNode had left/right handles have no handle id (null/undefined).
+        // With multiple handles of the same type per node, React Flow can no longer resolve an
+        // unset handle id and silently drops the edge — default those to the old top/bottom pair.
+        setEdges(
+          graph.edges.map((edge) => ({
+            ...edge,
+            sourceHandle: edge.sourceHandle ?? 'bottom',
+            targetHandle: edge.targetHandle ?? 'top',
+          })),
+        )
         skipNextSave.current = true
         setLoadState('ready')
       })
