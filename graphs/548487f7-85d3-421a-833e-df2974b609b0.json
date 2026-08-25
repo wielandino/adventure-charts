@@ -2,15 +2,15 @@
   "id": "548487f7-85d3-421a-833e-df2974b609b0",
   "name": "Akte Hasskoeter",
   "createdAt": "2026-08-25T18:11:37.422Z",
-  "updatedAt": "2026-08-25T20:46:21.906Z",
+  "updatedAt": "2026-08-25T20:47:50.523Z",
   "nodeCount": 12,
   "nodes": [
     {
       "id": "4fd4034f-e55d-4f4e-a534-01cb7b4113ba",
       "type": "groupNode",
       "position": {
-        "x": -2775,
-        "y": -1170
+        "x": -2790,
+        "y": -1230
       },
       "width": 648,
       "height": 785,
@@ -249,7 +249,7 @@
         "width": 168,
         "height": 80
       },
-      "selected": true,
+      "selected": false,
       "dragging": false
     }
   ],
@@ -288,7 +288,9 @@
       "targetHandle": "top",
       "id": "ee6e1c08-322f-4725-8c68-5c1fc430fe69",
       "type": "smoothstep",
-      "selected": false
+      "selected": false,
+      "label": "Hallo",
+      "data": {}
     },
     {
       "markerEnd": {
