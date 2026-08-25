@@ -2,25 +2,25 @@
   "id": "548487f7-85d3-421a-833e-df2974b609b0",
   "name": "Akte Hasskoeter",
   "createdAt": "2026-08-25T18:11:37.422Z",
-  "updatedAt": "2026-08-25T19:06:46.355Z",
-  "nodeCount": 8,
+  "updatedAt": "2026-08-25T20:46:21.906Z",
+  "nodeCount": 12,
   "nodes": [
     {
       "id": "4fd4034f-e55d-4f4e-a534-01cb7b4113ba",
       "type": "groupNode",
       "position": {
-        "x": -1230,
-        "y": -1995
+        "x": -2775,
+        "y": -1170
       },
-      "width": 559,
-      "height": 663,
+      "width": 648,
+      "height": 785,
       "data": {
         "label": "James Zimmerschlüssel",
         "hidden": false
       },
       "measured": {
-        "width": 559,
-        "height": 663
+        "width": 648,
+        "height": 785
       },
       "selected": false,
       "dragging": false,
@@ -30,12 +30,13 @@
       "id": "9009b55f-b634-4934-add4-bc1c7db590e0",
       "type": "puzzleNode",
       "position": {
-        "x": 45,
-        "y": 75
+        "x": 75,
+        "y": 60
       },
       "data": {
         "label": "Vogelnest",
-        "kind": "puzzle"
+        "kind": "puzzle",
+        "notes": "<br />\n\n<br />"
       },
       "measured": {
         "width": 168,
@@ -52,8 +53,8 @@
       "id": "1922a18d-8c16-493f-9488-ed529f65407b",
       "type": "puzzleNode",
       "position": {
-        "x": 40.80064348254837,
-        "y": 237.8004014685048
+        "x": 60,
+        "y": 240
       },
       "data": {
         "label": "Singen",
@@ -74,8 +75,8 @@
       "id": "9d803dc0-33c3-499b-9493-5233c8e12e19",
       "type": "puzzleNode",
       "position": {
-        "x": 45,
-        "y": 390
+        "x": 30,
+        "y": 420
       },
       "data": {
         "label": "Küken",
@@ -97,7 +98,7 @@
       "type": "puzzleNode",
       "position": {
         "x": 300,
-        "y": 75
+        "y": 60
       },
       "data": {
         "label": "Küken säubern",
@@ -119,17 +120,18 @@
       "type": "puzzleNode",
       "position": {
         "x": 315,
-        "y": 390
+        "y": 375
       },
       "data": {
         "label": "Katze fängt Küken",
-        "kind": "location"
+        "kind": "location",
+        "color": "#ef6c6c"
       },
       "measured": {
         "width": 168,
         "height": 80
       },
-      "selected": true,
+      "selected": false,
       "dragging": false,
       "parentId": "4fd4034f-e55d-4f4e-a534-01cb7b4113ba",
       "extent": "parent",
@@ -140,8 +142,8 @@
       "id": "41d968fd-5376-4547-9e6f-2f6938895b4b",
       "type": "puzzleNode",
       "position": {
-        "x": 345,
-        "y": 555
+        "x": 450,
+        "y": 660
       },
       "data": {
         "label": "James bewusstlos",
@@ -163,7 +165,7 @@
       "type": "puzzleNode",
       "position": {
         "x": 45,
-        "y": 570
+        "y": 615
       },
       "data": {
         "label": "James Zimmerschlüssel",
@@ -179,6 +181,76 @@
       "extent": "parent",
       "expandParent": true,
       "hidden": false
+    },
+    {
+      "id": "7f99bc68-f284-4ec9-b7f2-1524ffa9878e",
+      "type": "puzzleNode",
+      "position": {
+        "x": -2045,
+        "y": -990
+      },
+      "data": {
+        "label": "Neuer Knoten",
+        "kind": "puzzle"
+      },
+      "measured": {
+        "width": 168,
+        "height": 80
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "7e654d1c-bcf4-4bd5-8586-c6ab944c341a",
+      "type": "puzzleNode",
+      "position": {
+        "x": 325,
+        "y": 270
+      },
+      "data": {
+        "label": "Neuer Knoten",
+        "kind": "puzzle"
+      },
+      "measured": {
+        "width": 168,
+        "height": 80
+      }
+    },
+    {
+      "id": "f63ac3bc-ccb9-405c-9af2-e05724807090",
+      "type": "puzzleNode",
+      "position": {
+        "x": -2030,
+        "y": -1125
+      },
+      "data": {
+        "label": "Neuer Knoten",
+        "kind": "puzzle"
+      },
+      "measured": {
+        "width": 168,
+        "height": 80
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "0dd868fa-aa67-43fd-ba13-fd0a3aca0bff",
+      "type": "puzzleNode",
+      "position": {
+        "x": -2055,
+        "y": -780
+      },
+      "data": {
+        "label": "Neuer Knoten",
+        "kind": "puzzle"
+      },
+      "measured": {
+        "width": 168,
+        "height": 80
+      },
+      "selected": true,
+      "dragging": false
     }
   ],
   "edges": [
@@ -191,7 +263,8 @@
       "target": "b8b8c592-ed6b-4e0f-94b5-96940102d504",
       "targetHandle": "left",
       "id": "0f6dd080-fe45-4010-a109-3385dafb7258",
-      "type": "smoothstep"
+      "type": "smoothstep",
+      "selected": false
     },
     {
       "markerEnd": {
@@ -202,7 +275,8 @@
       "target": "1922a18d-8c16-493f-9488-ed529f65407b",
       "targetHandle": "top",
       "id": "eb5df702-7407-4223-9a09-8c15269a550d",
-      "type": "smoothstep"
+      "type": "smoothstep",
+      "selected": false
     },
     {
       "markerEnd": {
@@ -213,7 +287,8 @@
       "target": "766dd7be-3017-4582-9e11-492a19eff251",
       "targetHandle": "top",
       "id": "ee6e1c08-322f-4725-8c68-5c1fc430fe69",
-      "type": "smoothstep"
+      "type": "smoothstep",
+      "selected": false
     },
     {
       "markerEnd": {
@@ -224,7 +299,8 @@
       "target": "766dd7be-3017-4582-9e11-492a19eff251",
       "targetHandle": "left",
       "id": "3a52c3f0-16b7-44c3-ac4e-4526bdd026c7",
-      "type": "smoothstep"
+      "type": "smoothstep",
+      "selected": false
     },
     {
       "id": "ae69176c-3e62-4fa7-8eb1-6c9d195e484d",
@@ -232,7 +308,8 @@
       "target": "4efe2214-02b8-4fbe-868f-e89e1560af90",
       "sourceHandle": "bottom",
       "targetHandle": "top",
-      "type": "smoothstep"
+      "type": "smoothstep",
+      "selected": false
     },
     {
       "markerEnd": {
@@ -243,7 +320,8 @@
       "target": "41d968fd-5376-4547-9e6f-2f6938895b4b",
       "targetHandle": "left",
       "id": "dcd2337c-f866-4f67-ab7b-2de742582444",
-      "type": "smoothstep"
+      "type": "smoothstep",
+      "selected": false
     },
     {
       "markerEnd": {
@@ -254,7 +332,20 @@
       "target": "9d803dc0-33c3-499b-9493-5233c8e12e19",
       "targetHandle": "top",
       "id": "f041b826-b021-4355-ad16-22222bd967a8",
-      "type": "smoothstep"
+      "type": "smoothstep",
+      "selected": false
+    },
+    {
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "7f99bc68-f284-4ec9-b7f2-1524ffa9878e",
+      "sourceHandle": "bottom",
+      "target": "0dd868fa-aa67-43fd-ba13-fd0a3aca0bff",
+      "targetHandle": "top",
+      "id": "d8dbffb5-5965-4916-b738-b3d61247f55e",
+      "type": "smoothstep",
+      "selected": false
     }
   ]
 }

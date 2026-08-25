@@ -42,9 +42,19 @@ interface UseGraphEditorActionsArgs {
   setConnectSourceId: (id: string | null) => void
   setIsPlacingNode: (active: boolean) => void
   setGhostScreenPos: (pos: { x: number; y: number } | null) => void
+  setIsDescriptionDialogOpen: (open: boolean) => void
   requestConfirm: (title: string, message: string) => Promise<boolean>
   reactFlowInstanceRef: React.RefObject<ReactFlowInstance<AnyPuzzleNode, PuzzleFlowEdge> | null>
 }
+
+const NEW_NODE_DRAG_TYPE = 'application/adventurechart-node'
+
+const transparentDragImage = (() => {
+  if (typeof Image === 'undefined') return null
+  const img = new Image()
+  img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='
+  return img
+})()
 
 export function useGraphEditorActions({
   nodes,
@@ -64,6 +74,7 @@ export function useGraphEditorActions({
   setConnectSourceId,
   setIsPlacingNode,
   setGhostScreenPos,
+  setIsDescriptionDialogOpen,
   requestConfirm,
   reactFlowInstanceRef,
 }: UseGraphEditorActionsArgs) {
@@ -94,12 +105,12 @@ export function useGraphEditorActions({
     [setGhostScreenPos],
   )
 
-  const handlePlacementClick = useCallback(
-    (event: React.MouseEvent) => {
+  const createNodeAtScreenPos = useCallback(
+    (clientX: number, clientY: number) => {
       const instance = reactFlowInstanceRef.current
       if (!instance) return
       commit()
-      const flowPos = instance.screenToFlowPosition({ x: event.clientX, y: event.clientY })
+      const flowPos = instance.screenToFlowPosition({ x: clientX, y: clientY })
       const newNode: PuzzleFlowNode = {
         id: crypto.randomUUID(),
         type: 'puzzleNode',
@@ -107,12 +118,60 @@ export function useGraphEditorActions({
         data: { label: 'Neuer Knoten', kind: 'puzzle' },
       }
       setNodes((nds) => [...nds, newNode])
-      setIsPlacingNode(false)
-      setGhostScreenPos(null)
       setSelectedEdgeId(null)
       setSelectedNodeId(newNode.id)
     },
-    [commit, setNodes, reactFlowInstanceRef, setIsPlacingNode, setGhostScreenPos, setSelectedEdgeId, setSelectedNodeId],
+    [commit, setNodes, reactFlowInstanceRef, setSelectedEdgeId, setSelectedNodeId],
+  )
+
+  const handlePlacementClick = useCallback(
+    (event: React.MouseEvent) => {
+      createNodeAtScreenPos(event.clientX, event.clientY)
+      setIsPlacingNode(false)
+      setGhostScreenPos(null)
+    },
+    [createNodeAtScreenPos, setIsPlacingNode, setGhostScreenPos],
+  )
+
+  const handleNewNodeDragStart = useCallback(
+    (event: React.DragEvent) => {
+      event.dataTransfer.setData(NEW_NODE_DRAG_TYPE, 'puzzle')
+      event.dataTransfer.effectAllowed = 'move'
+      if (transparentDragImage) event.dataTransfer.setDragImage(transparentDragImage, 0, 0)
+      handleStartPlacingNode()
+    },
+    [handleStartPlacingNode],
+  )
+
+  const handleNewNodeDragEnd = useCallback(
+    (event: React.DragEvent) => {
+      if (event.dataTransfer.dropEffect === 'none') {
+        setIsPlacingNode(false)
+        setGhostScreenPos(null)
+      }
+    },
+    [setIsPlacingNode, setGhostScreenPos],
+  )
+
+  const handlePaneDragOver = useCallback(
+    (event: React.DragEvent) => {
+      if (!event.dataTransfer.types.includes(NEW_NODE_DRAG_TYPE)) return
+      event.preventDefault()
+      event.dataTransfer.dropEffect = 'move'
+      setGhostScreenPos({ x: event.clientX, y: event.clientY })
+    },
+    [setGhostScreenPos],
+  )
+
+  const handlePaneDrop = useCallback(
+    (event: React.DragEvent) => {
+      if (!event.dataTransfer.types.includes(NEW_NODE_DRAG_TYPE)) return
+      event.preventDefault()
+      createNodeAtScreenPos(event.clientX, event.clientY)
+      setIsPlacingNode(false)
+      setGhostScreenPos(null)
+    },
+    [createNodeAtScreenPos, setIsPlacingNode, setGhostScreenPos],
   )
 
   const handleNodeDataChange = useCallback(
@@ -361,6 +420,17 @@ export function useGraphEditorActions({
     ],
   )
 
+  const handleNodeDoubleClick = useCallback(
+    (_: React.MouseEvent, node: AnyPuzzleNode) => {
+      if (isGroupNode(node) || connectMode) return
+      setSelectedEdgeId(null)
+      setSelectedGroupId(null)
+      setSelectedNodeId(node.id)
+      setIsDescriptionDialogOpen(true)
+    },
+    [connectMode, setSelectedNodeId, setSelectedEdgeId, setSelectedGroupId, setIsDescriptionDialogOpen],
+  )
+
   const handleEdgeClick = useCallback(
     (_: React.MouseEvent, edge: PuzzleFlowEdge) => {
       if (connectMode) return
@@ -424,6 +494,10 @@ export function useGraphEditorActions({
     handleStartPlacingNode,
     handlePlacementMouseMove,
     handlePlacementClick,
+    handleNewNodeDragStart,
+    handleNewNodeDragEnd,
+    handlePaneDragOver,
+    handlePaneDrop,
     handleNodeDataChange,
     handleGroupDataChange,
     handleAssignGroup,
@@ -434,6 +508,7 @@ export function useGraphEditorActions({
     handleEdgeDataChange,
     handleToggleConnectMode,
     handleNodeClick,
+    handleNodeDoubleClick,
     handleEdgeClick,
     handlePaneClick,
     handleNodeDelete,

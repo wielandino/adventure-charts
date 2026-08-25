@@ -3,6 +3,8 @@ import { GroupIcon, LinkIcon, PlusIcon } from './icons'
 interface NodeToolbarProps {
   isPlacingNode: boolean
   onStartPlacingNode: () => void
+  onDragStartNewNode: (event: React.DragEvent) => void
+  onDragEndNewNode: (event: React.DragEvent) => void
   connectMode: boolean
   connectSourceId: string | null
   onToggleConnectMode: () => void
@@ -13,6 +15,8 @@ interface NodeToolbarProps {
 export function NodeToolbar({
   isPlacingNode,
   onStartPlacingNode,
+  onDragStartNewNode,
+  onDragEndNewNode,
   connectMode,
   connectSourceId,
   onToggleConnectMode,
@@ -25,7 +29,10 @@ export function NodeToolbar({
         className="node-toolbar-button"
         aria-pressed={isPlacingNode}
         onClick={onStartPlacingNode}
-        title="Knoten hinzufügen"
+        draggable
+        onDragStart={onDragStartNewNode}
+        onDragEnd={onDragEndNewNode}
+        title="Knoten hinzufügen (klicken oder auf die Fläche ziehen)"
       >
         <span className="node-toolbar-icon">
           <PlusIcon size={16} />

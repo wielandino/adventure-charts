@@ -48,10 +48,15 @@ export function useGraphDerivedState(
       edges
         .filter((e) => !hiddenNodeIds.has(e.source) && !hiddenNodeIds.has(e.target))
         .map((edge) => {
+          const isSelected = edge.id === selectedEdgeId
           if (cycleEdgeIds.has(edge.id)) {
             return {
               ...edge,
-              style: { stroke: 'var(--status-danger)', strokeWidth: 2 },
+              style: {
+                stroke: 'var(--status-danger)',
+                strokeWidth: isSelected ? 3.5 : 2,
+                filter: isSelected ? `drop-shadow(0 0 4px ${statusDangerHex[resolvedTheme]})` : undefined,
+              },
               markerEnd: { type: MarkerType.ArrowClosed, color: statusDangerHex[resolvedTheme] },
               animated: true,
             }
@@ -59,7 +64,11 @@ export function useGraphDerivedState(
           const kind = edge.data?.kind ?? 'requires'
           return {
             ...edge,
-            style: { stroke: edgeKindColors[kind], strokeWidth: 1.75 },
+            style: {
+              stroke: edgeKindColors[kind],
+              strokeWidth: isSelected ? 2 : 1.75,
+              filter: isSelected ? `drop-shadow(0 0 4px ${edgeKindHex[resolvedTheme][kind]})` : undefined,
+            },
             markerEnd: { type: MarkerType.ArrowClosed, color: edgeKindHex[resolvedTheme][kind] },
             labelBgPadding: [6, 4] as [number, number],
             labelBgBorderRadius: 6,
@@ -67,7 +76,7 @@ export function useGraphDerivedState(
             labelBgStyle: { fill: edgeKindHex[resolvedTheme][kind], fillOpacity: 0.9 },
           }
         }),
-    [edges, hiddenNodeIds, cycleEdgeIds, resolvedTheme],
+    [edges, hiddenNodeIds, cycleEdgeIds, resolvedTheme, selectedEdgeId],
   )
 
   return {

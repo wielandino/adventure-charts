@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { kindStyles } from './PuzzleNode'
 import { ColorPicker } from './ColorPicker'
 import { FormField } from './FormField'
@@ -13,14 +12,26 @@ interface NodeInspectorProps {
   onAssignGroup: (groupId: string | null) => void
   onDelete: () => void
   onClose: () => void
+  isDescriptionDialogOpen: boolean
+  onOpenDescriptionDialog: () => void
+  onCloseDescriptionDialog: () => void
 }
 
 const kindOptions: PuzzleNodeKind[] = ['puzzle', 'item', 'location']
 
-export function NodeInspector({ node, groups, onChange, onAssignGroup, onDelete, onClose }: NodeInspectorProps) {
+export function NodeInspector({
+  node,
+  groups,
+  onChange,
+  onAssignGroup,
+  onDelete,
+  onClose,
+  isDescriptionDialogOpen,
+  onOpenDescriptionDialog,
+  onCloseDescriptionDialog,
+}: NodeInspectorProps) {
   const { data } = node
   const color = data.color ?? kindStyles[data.kind].border
-  const [isNotesOpen, setIsNotesOpen] = useState(false)
 
   return (
     <aside className="node-inspector">
@@ -78,7 +89,7 @@ export function NodeInspector({ node, groups, onChange, onAssignGroup, onDelete,
         <button
           type="button"
           className="node-inspector-notes-button"
-          onClick={() => setIsNotesOpen(true)}
+          onClick={onOpenDescriptionDialog}
         >
           {data.notes ? 'Beschreibung bearbeiten' : 'Beschreibung hinzufügen'}
         </button>
@@ -89,8 +100,8 @@ export function NodeInspector({ node, groups, onChange, onAssignGroup, onDelete,
         Knoten löschen
       </button>
 
-      {isNotesOpen && (
-        <DescriptionDialog node={node} onChange={onChange} onClose={() => setIsNotesOpen(false)} />
+      {isDescriptionDialogOpen && (
+        <DescriptionDialog node={node} onChange={onChange} onClose={onCloseDescriptionDialog} />
       )}
     </aside>
   )

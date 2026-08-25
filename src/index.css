@@ -1008,7 +1008,9 @@ button {
 }
 
 .group-node.is-selected {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--node-accent) 45%, transparent);
+  border-style: solid;
+  border-width: 2px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--node-accent) 55%, transparent), 0 0 0 1px var(--node-accent);
 }
 
 .group-node.is-hidden {
@@ -1122,15 +1124,24 @@ button {
 
 /* React Flow overrides */
 
-.react-flow__handle {
-  width: 9px;
-  height: 9px;
-  background: var(--accent-secondary);
+.react-flow__handle.react-flow__handle {
+  width: 12px;
+  height: 12px;
+  background: var(--node-accent, var(--accent-secondary));
+  border: 2px solid var(--bg-elevated);
+  border-radius: 50%;
+  transition: transform 0.1s ease, background 0.1s ease;
+}
+
+.react-flow__resize-control.react-flow__resize-control.handle {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
   border: 2px solid var(--bg-elevated);
 }
 
-.react-flow__handle:hover {
-  background: var(--accent);
+.react-flow__resize-control.react-flow__resize-control.handle:hover {
+  filter: brightness(1.15);
 }
 
 .react-flow__selection {

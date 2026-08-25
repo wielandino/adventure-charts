@@ -66,6 +66,8 @@ function GraphEditor() {
     setIsPlacingNode,
     ghostScreenPos,
     setGhostScreenPos,
+    isDescriptionDialogOpen,
+    setIsDescriptionDialogOpen,
   } = useGraphSelection(nodes, edges)
 
   const { commit, commitDebounced, undo, redo } = useGraphHistory(nodes, edges, setNodes, setEdges)
@@ -77,6 +79,10 @@ function GraphEditor() {
     handleStartPlacingNode,
     handlePlacementMouseMove,
     handlePlacementClick,
+    handleNewNodeDragStart,
+    handleNewNodeDragEnd,
+    handlePaneDragOver,
+    handlePaneDrop,
     handleNodeDataChange,
     handleGroupDataChange,
     handleAssignGroup,
@@ -86,6 +92,7 @@ function GraphEditor() {
     handleEdgeDataChange,
     handleToggleConnectMode,
     handleNodeClick,
+    handleNodeDoubleClick,
     handleEdgeClick,
     handlePaneClick,
     handleNodeDelete,
@@ -111,6 +118,7 @@ function GraphEditor() {
     setConnectSourceId,
     setIsPlacingNode,
     setGhostScreenPos,
+    setIsDescriptionDialogOpen,
     requestConfirm,
     reactFlowInstanceRef,
   })
@@ -167,6 +175,8 @@ function GraphEditor() {
         <NodeToolbar
           isPlacingNode={isPlacingNode}
           onStartPlacingNode={handleStartPlacingNode}
+          onDragStartNewNode={handleNewNodeDragStart}
+          onDragEndNewNode={handleNewNodeDragEnd}
           connectMode={connectMode}
           connectSourceId={connectSourceId}
           onToggleConnectMode={handleToggleConnectMode}
@@ -185,6 +195,7 @@ function GraphEditor() {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onNodeClick={handleNodeClick}
+            onNodeDoubleClick={handleNodeDoubleClick}
             onEdgeClick={handleEdgeClick}
             onPaneClick={handlePaneClick}
             onNodeDragStart={handleNodeDragStart}
@@ -219,6 +230,8 @@ function GraphEditor() {
             className="node-placement-overlay"
             onMouseMove={handlePlacementMouseMove}
             onClick={handlePlacementClick}
+            onDragOver={handlePaneDragOver}
+            onDrop={handlePaneDrop}
           >
             <NodePlacementGhost position={ghostScreenPos} />
           </div>
@@ -231,6 +244,9 @@ function GraphEditor() {
             onAssignGroup={handleAssignGroup}
             onDelete={handleNodeDelete}
             onClose={() => setSelectedNodeId(null)}
+            isDescriptionDialogOpen={isDescriptionDialogOpen}
+            onOpenDescriptionDialog={() => setIsDescriptionDialogOpen(true)}
+            onCloseDescriptionDialog={() => setIsDescriptionDialogOpen(false)}
           />
         )}
         {selectedEdge && (
