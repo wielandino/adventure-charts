@@ -3,18 +3,16 @@ import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { ConnectModeContext } from '../context/ConnectModeContext'
 import { CycleWarningContext } from '../context/CycleWarningContext'
 import { IsolatedNodeContext } from '../context/IsolatedNodeContext'
+import { TypeConfigContext } from '../context/TypeConfigContext'
+import { findNodeType, UNKNOWN_TYPE_COLOR } from '../utils/graphEditorVisuals'
 import { UnlinkIcon, WarningIcon } from './icons'
-import type { PuzzleFlowNode, PuzzleNodeData } from '../types'
-
-export const kindStyles: Record<PuzzleNodeData['kind'], { border: string; label: string }> = {
-  puzzle: { border: 'var(--kind-puzzle)', label: 'Puzzle' },
-  item: { border: 'var(--kind-item)', label: 'Item' },
-  location: { border: 'var(--kind-location)', label: 'Location' },
-}
+import type { PuzzleFlowNode } from '../types'
 
 export function PuzzleNode({ id, data, selected }: NodeProps<PuzzleFlowNode>) {
-  const style = kindStyles[data.kind]
-  const accent = data.color ?? style.border
+  const typeConfig = useContext(TypeConfigContext)
+  const nodeType = typeConfig && findNodeType(typeConfig.nodeTypes, data.kind)
+  const accent = data.color ?? nodeType?.color ?? UNKNOWN_TYPE_COLOR
+  const kindLabel = nodeType?.label ?? 'Kein Typ'
   const connectSourceId = useContext(ConnectModeContext)
   const isConnectPending = connectSourceId === id
   const cycleNodeIds = useContext(CycleWarningContext)
@@ -43,12 +41,20 @@ export function PuzzleNode({ id, data, selected }: NodeProps<PuzzleFlowNode>) {
           <UnlinkIcon size={12} />
         </span>
       )}
-      <Handle type="target" position={Position.Top} id="top" />
-      <Handle type="target" position={Position.Left} id="left" />
-      <div className="puzzle-node-kind">{style.label}</div>
+      {/* Each side carries both a source and a target handle stacked on the same spot, so a
+          connection can be dragged from or to any side — the drag direction (not the side)
+          decides which node ends up as source vs. target. The non-interactive twin only
+          participates in React Flow's drop-target proximity check. */}
+      <Handle type="target" position={Position.Top} id="top" style={{ pointerEvents: 'none' }} />
+      <Handle type="source" position={Position.Top} id="top" />
+      <Handle type="target" position={Position.Left} id="left" style={{ pointerEvents: 'none' }} />
+      <Handle type="source" position={Position.Left} id="left" />
+      <div className="puzzle-node-kind">{kindLabel}</div>
       <div className="puzzle-node-label">{data.label}</div>
       {data.description && <div className="puzzle-node-description">{data.description}</div>}
+      <Handle type="target" position={Position.Bottom} id="bottom" style={{ pointerEvents: 'none' }} />
       <Handle type="source" position={Position.Bottom} id="bottom" />
+      <Handle type="target" position={Position.Right} id="right" style={{ pointerEvents: 'none' }} />
       <Handle type="source" position={Position.Right} id="right" />
     </div>
   )

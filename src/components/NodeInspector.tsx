@@ -1,13 +1,14 @@
-import { kindStyles } from './PuzzleNode'
 import { ColorPicker } from './ColorPicker'
 import { FormField } from './FormField'
 import { DescriptionDialog } from './DescriptionDialog'
 import { CloseIcon, TrashIcon } from './icons'
-import type { PuzzleFlowNode, PuzzleGroupNode, PuzzleNodeData, PuzzleNodeKind } from '../types'
+import { findNodeType, UNKNOWN_TYPE_COLOR } from '../utils/graphEditorVisuals'
+import type { NodeTypeDef, PuzzleFlowNode, PuzzleGroupNode, PuzzleNodeData } from '../types'
 
 interface NodeInspectorProps {
   node: PuzzleFlowNode
   groups: PuzzleGroupNode[]
+  nodeTypes: NodeTypeDef[]
   onChange: (patch: Partial<PuzzleNodeData>) => void
   onAssignGroup: (groupId: string | null) => void
   onDelete: () => void
@@ -17,11 +18,10 @@ interface NodeInspectorProps {
   onCloseDescriptionDialog: () => void
 }
 
-const kindOptions: PuzzleNodeKind[] = ['puzzle', 'item', 'location']
-
 export function NodeInspector({
   node,
   groups,
+  nodeTypes,
   onChange,
   onAssignGroup,
   onDelete,
@@ -31,7 +31,8 @@ export function NodeInspector({
   onCloseDescriptionDialog,
 }: NodeInspectorProps) {
   const { data } = node
-  const color = data.color ?? kindStyles[data.kind].border
+  const currentType = findNodeType(nodeTypes, data.kind)
+  const color = data.color ?? currentType?.color ?? UNKNOWN_TYPE_COLOR
 
   return (
     <aside className="node-inspector">
@@ -47,10 +48,15 @@ export function NodeInspector({
       </FormField>
 
       <FormField label="Typ">
-        <select value={data.kind} onChange={(e) => onChange({ kind: e.target.value as PuzzleNodeKind })}>
-          {kindOptions.map((kind) => (
-            <option key={kind} value={kind}>
-              {kindStyles[kind].label}
+        <select value={data.kind} onChange={(e) => onChange({ kind: e.target.value })}>
+          {!currentType && (
+            <option value={data.kind} disabled hidden>
+              Unbekannter Typ
+            </option>
+          )}
+          {nodeTypes.map((type) => (
+            <option key={type.id} value={type.id}>
+              {type.label}
             </option>
           ))}
         </select>

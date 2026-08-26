@@ -25,3 +25,4 @@ dist-ssr
 
 .claude
 graphs/*
+types.json

@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   ReactFlow,
@@ -16,6 +16,7 @@ import { NodeInspector } from '../components/NodeInspector'
 import { EdgeInspector } from '../components/EdgeInspector'
 import { GroupInspector } from '../components/GroupInspector'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { ManageTypesDialog } from '../components/ManageTypesDialog'
 import { NodePlacementGhost } from '../components/NodePlacementGhost'
 import { EditorHeader } from '../components/EditorHeader'
 import { NodeToolbar } from '../components/NodeToolbar'
@@ -24,6 +25,7 @@ import { ConnectModeContext } from '../context/ConnectModeContext'
 import { CycleWarningContext } from '../context/CycleWarningContext'
 import { IsolatedNodeContext } from '../context/IsolatedNodeContext'
 import { GroupActionsContext } from '../context/GroupActionsContext'
+import { TypeConfigContext } from '../context/TypeConfigContext'
 import { useGraphHistory } from '../hooks/useGraphHistory'
 import { useGraphSelection } from '../hooks/useGraphSelection'
 import { useGraphPersistence } from '../hooks/useGraphPersistence'
@@ -31,7 +33,8 @@ import { useConfirmDialog } from '../hooks/useConfirmDialog'
 import { useGraphEditorActions } from '../hooks/useGraphEditorActions'
 import { useUndoRedoKeyboard } from '../hooks/useUndoRedoKeyboard'
 import { useGraphDerivedState } from '../hooks/useGraphDerivedState'
-import { nodeTypes, defaultEdgeOptions, nodeKindColors } from '../utils/graphEditorVisuals'
+import { useTypeConfig } from '../hooks/useTypeConfig'
+import { nodeTypes, defaultEdgeOptions, findNodeType, UNKNOWN_TYPE_COLOR } from '../utils/graphEditorVisuals'
 import { isGroupNode, type AnyPuzzleNode, type PuzzleFlowEdge } from '../types'
 
 function GraphEditor() {
@@ -40,6 +43,9 @@ function GraphEditor() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState<AnyPuzzleNode>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<PuzzleFlowEdge>([])
+  const [isManageTypesOpen, setIsManageTypesOpen] = useState(false)
+
+  const { typeConfig, saveTypeConfig } = useTypeConfig()
 
   const reactFlowInstanceRef = useRef<ReactFlowInstance<AnyPuzzleNode, PuzzleFlowEdge> | null>(null)
 
@@ -88,6 +94,7 @@ function GraphEditor() {
     handleAssignGroup,
     handleGroupSelectedNodes,
     handleToggleGroupVisibility,
+    handleJumpToGroup,
     handleGroupDelete,
     handleEdgeDataChange,
     handleToggleConnectMode,
@@ -102,6 +109,7 @@ function GraphEditor() {
   } = useGraphEditorActions({
     nodes,
     edges,
+    nodeTypes: typeConfig?.nodeTypes ?? [],
     setNodes,
     setEdges,
     commit,
@@ -140,6 +148,7 @@ function GraphEditor() {
     selectedGroup,
     groupNodes,
     eligibleForGrouping,
+    groupMemberCounts,
     cycleNodeIds,
     isolatedNodeIds,
     displayEdges,
@@ -147,7 +156,7 @@ function GraphEditor() {
 
   const flowNodeTypes = useMemo(() => nodeTypes, [])
 
-  if (loadState === 'loading') {
+  if (loadState === 'loading' || !typeConfig) {
     return <CenteredMessage text="Graph wird geladen …" />
   }
 
@@ -170,6 +179,10 @@ function GraphEditor() {
         isolatedCount={isolatedNodeIds.size}
         saveStatus={saveStatus}
         onSaveClick={handleSaveClick}
+        onOpenManageTypes={() => setIsManageTypesOpen(true)}
+        groups={groupNodes}
+        groupMemberCounts={groupMemberCounts}
+        onSelectGroup={handleJumpToGroup}
       />
       <div className="editor-canvas">
         <NodeToolbar
@@ -183,6 +196,7 @@ function GraphEditor() {
           eligibleCount={eligibleForGrouping.length}
           onGroupSelectedNodes={handleGroupSelectedNodes}
         />
+        <TypeConfigContext.Provider value={typeConfig}>
         <ConnectModeContext.Provider value={connectMode ? connectSourceId : null}>
          <CycleWarningContext.Provider value={cycleNodeIds}>
          <IsolatedNodeContext.Provider value={isolatedNodeIds}>
@@ -200,6 +214,8 @@ function GraphEditor() {
             onPaneClick={handlePaneClick}
             onNodeDragStart={handleNodeDragStart}
             onBeforeDelete={handleBeforeDelete}
+            onDragOver={handlePaneDragOver}
+            onDrop={handlePaneDrop}
             onInit={(instance) => {
               reactFlowInstanceRef.current = instance
             }}
@@ -216,8 +232,8 @@ function GraphEditor() {
               zoomable
               nodeColor={(node) => {
                 const n = node as AnyPuzzleNode
-                if (isGroupNode(n)) return n.data.color ?? 'var(--border-strong)'
-                return n.data.color ?? nodeKindColors[n.data.kind ?? 'puzzle']
+                if (isGroupNode(n)) return n.data.color ?? UNKNOWN_TYPE_COLOR
+                return n.data.color ?? findNodeType(typeConfig.nodeTypes, n.data.kind)?.color ?? UNKNOWN_TYPE_COLOR
               }}
             />
           </ReactFlow>
@@ -225,6 +241,7 @@ function GraphEditor() {
          </IsolatedNodeContext.Provider>
          </CycleWarningContext.Provider>
         </ConnectModeContext.Provider>
+        </TypeConfigContext.Provider>
         {isPlacingNode && (
           <div
             className="node-placement-overlay"
@@ -240,6 +257,7 @@ function GraphEditor() {
           <NodeInspector
             node={selectedNode}
             groups={groupNodes}
+            nodeTypes={typeConfig.nodeTypes}
             onChange={handleNodeDataChange}
             onAssignGroup={handleAssignGroup}
             onDelete={handleNodeDelete}
@@ -252,6 +270,7 @@ function GraphEditor() {
         {selectedEdge && (
           <EdgeInspector
             edge={selectedEdge}
+            edgeTypes={typeConfig.edgeTypes}
             onChange={handleEdgeDataChange}
             onDelete={handleEdgeDelete}
             onClose={() => setSelectedEdgeId(null)}
@@ -272,6 +291,13 @@ function GraphEditor() {
             message={confirmRequest.message}
             onConfirm={() => resolveConfirm(true)}
             onCancel={() => resolveConfirm(false)}
+          />
+        )}
+        {isManageTypesOpen && (
+          <ManageTypesDialog
+            typeConfig={typeConfig}
+            onSave={saveTypeConfig}
+            onClose={() => setIsManageTypesOpen(false)}
           />
         )}
       </div>

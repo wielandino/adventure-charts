@@ -25,10 +25,18 @@ export function NodeToolbar({
 }: NodeToolbarProps) {
   return (
     <nav className="node-toolbar" aria-label="Node hinzufügen">
-      <button
+      <div
         className="node-toolbar-button"
+        role="button"
+        tabIndex={0}
         aria-pressed={isPlacingNode}
         onClick={onStartPlacingNode}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            onStartPlacingNode()
+          }
+        }}
         draggable
         onDragStart={onDragStartNewNode}
         onDragEnd={onDragEndNewNode}
@@ -38,7 +46,7 @@ export function NodeToolbar({
           <PlusIcon size={16} />
         </span>
         <span>Knoten hinzufügen</span>
-      </button>
+      </div>
       <button
         className="node-toolbar-button"
         aria-pressed={connectMode}

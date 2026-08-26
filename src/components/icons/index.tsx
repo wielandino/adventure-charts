@@ -151,3 +151,12 @@ export function GroupIcon(props: IconProps) {
     </Icon>
   )
 }
+
+export function TagIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M20.5 12.4 12.6 20.3a1.5 1.5 0 0 1-2.12 0l-6.78-6.78a1.5 1.5 0 0 1 0-2.12L11.6 3.5H19a1.5 1.5 0 0 1 1.5 1.5v7.4Z" />
+      <circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none" />
+    </Icon>
+  )
+}

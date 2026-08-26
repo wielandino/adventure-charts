@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
 
 import { ThemeToggle } from './ThemeToggle'
-import { ArrowLeftIcon, SaveIcon, UnlinkIcon, WarningIcon } from './icons'
+import { GroupNavMenu } from './GroupNavMenu'
+import { ArrowLeftIcon, SaveIcon, TagIcon, UnlinkIcon, WarningIcon } from './icons'
+import type { PuzzleGroupNode } from '../types'
 
 interface EditorHeaderProps {
   name: string
@@ -10,6 +12,10 @@ interface EditorHeaderProps {
   isolatedCount: number
   saveStatus: 'idle' | 'saving' | 'saved'
   onSaveClick: () => void
+  onOpenManageTypes: () => void
+  groups: PuzzleGroupNode[]
+  groupMemberCounts: Map<string, number>
+  onSelectGroup: (groupId: string) => void
 }
 
 export function EditorHeader({
@@ -19,6 +25,10 @@ export function EditorHeader({
   isolatedCount,
   saveStatus,
   onSaveClick,
+  onOpenManageTypes,
+  groups,
+  groupMemberCounts,
+  onSelectGroup,
 }: EditorHeaderProps) {
   return (
     <header className="editor-header">
@@ -48,6 +58,15 @@ export function EditorHeader({
         <SaveIcon size={16} />
         Speichern
       </button>
+      <button
+        className="manage-types-button"
+        onClick={onOpenManageTypes}
+        title="Typen verwalten"
+        aria-label="Typen verwalten"
+      >
+        <TagIcon size={18} />
+      </button>
+      <GroupNavMenu groups={groups} groupMemberCounts={groupMemberCounts} onSelectGroup={onSelectGroup} />
       <ThemeToggle />
     </header>
   )

@@ -1,10 +1,8 @@
 import type { Edge, Node } from '@xyflow/react'
 
-export type PuzzleNodeKind = 'puzzle' | 'item' | 'location'
-
 export interface PuzzleNodeData extends Record<string, unknown> {
   label: string
-  kind: PuzzleNodeKind
+  kind: string
   color?: string
   description?: string
   notes?: string
@@ -30,10 +28,8 @@ export function isGroupNode(node: AnyPuzzleNode): node is PuzzleGroupNode {
   return node.type === 'groupNode'
 }
 
-export type PuzzleEdgeKind = 'requires' | 'unlocks' | 'gives'
-
 export interface PuzzleEdgeData extends Record<string, unknown> {
-  kind?: PuzzleEdgeKind
+  kind?: string
   internalNote?: string
 }
 
@@ -50,4 +46,20 @@ export interface GraphMeta {
 export interface GraphFile extends GraphMeta {
   nodes: AnyPuzzleNode[]
   edges: PuzzleFlowEdge[]
+}
+
+export interface NodeTypeDef {
+  id: string
+  label: string
+  color: string
+}
+
+export interface EdgeTypeDef {
+  id: string
+  label: string
+}
+
+export interface TypeConfig {
+  nodeTypes: NodeTypeDef[]
+  edgeTypes: EdgeTypeDef[]
 }

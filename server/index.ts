@@ -2,10 +2,34 @@ import cors from 'cors'
 import express from 'express'
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import type { GraphFile, GraphMeta } from '../src/types.js'
+import type { GraphFile, GraphMeta, TypeConfig } from '../src/types.js'
 
 const PORT = 3001
 const GRAPHS_DIR = path.resolve(import.meta.dirname, '..', 'graphs')
+const TYPES_FILE = path.resolve(import.meta.dirname, '..', 'types.json')
+
+const SEED_TYPE_CONFIG: TypeConfig = {
+  nodeTypes: [
+    { id: 'puzzle', label: 'Puzzle', color: '#7c5cff' },
+    { id: 'item', label: 'Item', color: '#b3792e' },
+    { id: 'location', label: 'Location', color: '#2f9e6e' },
+  ],
+  edgeTypes: [
+    { id: 'requires', label: 'Benötigt' },
+    { id: 'unlocks', label: 'Schaltet frei' },
+    { id: 'gives', label: 'Gibt' },
+  ],
+}
+
+async function readTypeConfig(): Promise<TypeConfig> {
+  try {
+    const raw = await readFile(TYPES_FILE, 'utf-8')
+    return JSON.parse(raw) as TypeConfig
+  } catch {
+    await writeFile(TYPES_FILE, JSON.stringify(SEED_TYPE_CONFIG, null, 2), 'utf-8')
+    return SEED_TYPE_CONFIG
+  }
+}
 
 async function ensureGraphsDir() {
   await mkdir(GRAPHS_DIR, { recursive: true })
@@ -98,6 +122,17 @@ app.put('/api/graphs/:id', async (req, res) => {
   }
   await writeFile(graphPath(updated.id), JSON.stringify(updated, null, 2), 'utf-8')
   res.json(updated)
+})
+
+app.get('/api/types', async (_req, res) => {
+  const config = await readTypeConfig()
+  res.json(config)
+})
+
+app.put('/api/types', async (req, res) => {
+  const config = req.body as TypeConfig
+  await writeFile(TYPES_FILE, JSON.stringify(config, null, 2), 'utf-8')
+  res.json(config)
 })
 
 app.delete('/api/graphs/:id', async (req, res) => {

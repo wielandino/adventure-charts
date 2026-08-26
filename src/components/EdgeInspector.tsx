@@ -1,31 +1,26 @@
 import { FormField } from './FormField'
 import { CloseIcon, TrashIcon } from './icons'
-import type { PuzzleEdgeKind, PuzzleFlowEdge } from '../types'
+import { findEdgeType } from '../utils/graphEditorVisuals'
+import type { EdgeTypeDef, PuzzleFlowEdge } from '../types'
 
 export interface EdgeInspectorPatch {
   label?: string
-  kind?: PuzzleEdgeKind
+  kind?: string
   internalNote?: string
 }
 
 interface EdgeInspectorProps {
   edge: PuzzleFlowEdge
+  edgeTypes: EdgeTypeDef[]
   onChange: (patch: EdgeInspectorPatch) => void
   onDelete: () => void
   onClose: () => void
 }
 
-const edgeKindLabels: Record<PuzzleEdgeKind, string> = {
-  requires: 'Benötigt',
-  unlocks: 'Schaltet frei',
-  gives: 'Gibt',
-}
-
-const edgeKindOptions: PuzzleEdgeKind[] = ['requires', 'unlocks', 'gives']
-
-export function EdgeInspector({ edge, onChange, onDelete, onClose }: EdgeInspectorProps) {
+export function EdgeInspector({ edge, edgeTypes, onChange, onDelete, onClose }: EdgeInspectorProps) {
   const label = typeof edge.label === 'string' ? edge.label : ''
-  const kind = edge.data?.kind ?? 'requires'
+  const kind = edge.data?.kind ?? edgeTypes[0]?.id
+  const currentType = findEdgeType(edgeTypes, kind)
 
   return (
     <aside className="node-inspector">
@@ -41,10 +36,15 @@ export function EdgeInspector({ edge, onChange, onDelete, onClose }: EdgeInspect
       </FormField>
 
       <FormField label="Typ">
-        <select value={kind} onChange={(e) => onChange({ kind: e.target.value as PuzzleEdgeKind })}>
-          {edgeKindOptions.map((option) => (
-            <option key={option} value={option}>
-              {edgeKindLabels[option]}
+        <select value={kind ?? ''} onChange={(e) => onChange({ kind: e.target.value })}>
+          {!currentType && (
+            <option value={kind ?? ''} disabled hidden>
+              Unbekannter Typ
+            </option>
+          )}
+          {edgeTypes.map((type) => (
+            <option key={type.id} value={type.id}>
+              {type.label}
             </option>
           ))}
         </select>
@@ -60,7 +60,7 @@ export function EdgeInspector({ edge, onChange, onDelete, onClose }: EdgeInspect
 
       <button className="node-inspector-delete" onClick={onDelete}>
         <TrashIcon size={16} />
-        Kante löschen
+        Verbindung löschen
       </button>
     </aside>
   )

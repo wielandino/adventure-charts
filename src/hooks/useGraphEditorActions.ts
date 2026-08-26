@@ -1,6 +1,7 @@
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import { addEdge, getNodesBounds, type Connection, type OnBeforeDelete, type ReactFlowInstance } from '@xyflow/react'
 
+import { computeNearestHandlePair } from '../utils/edgeHandles'
 import {
   GROUP_MIN_HEIGHT,
   GROUP_MIN_WIDTH,
@@ -15,6 +16,7 @@ import {
   isGroupNode,
   isPuzzleNode,
   type AnyPuzzleNode,
+  type NodeTypeDef,
   type PuzzleFlowEdge,
   type PuzzleFlowNode,
   type PuzzleGroupData,
@@ -26,6 +28,7 @@ import type { EdgeInspectorPatch } from '../components/EdgeInspector'
 interface UseGraphEditorActionsArgs {
   nodes: AnyPuzzleNode[]
   edges: PuzzleFlowEdge[]
+  nodeTypes: NodeTypeDef[]
   setNodes: (updater: AnyPuzzleNode[] | ((nds: AnyPuzzleNode[]) => AnyPuzzleNode[])) => void
   setEdges: (updater: PuzzleFlowEdge[] | ((eds: PuzzleFlowEdge[]) => PuzzleFlowEdge[])) => void
   commit: () => void
@@ -50,14 +53,24 @@ interface UseGraphEditorActionsArgs {
 const NEW_NODE_DRAG_TYPE = 'application/adventurechart-node'
 
 const transparentDragImage = (() => {
-  if (typeof Image === 'undefined') return null
-  const img = new Image()
-  img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='
-  return img
+  if (typeof document === 'undefined') return null
+  const canvas = document.createElement('canvas')
+  canvas.width = 1
+  canvas.height = 1
+  // Chrome requires the drag image element to actually be in the document
+  // (even off-screen) — an unattached canvas can abort the whole native
+  // drag session instead of just falling back to the default thumbnail.
+  canvas.style.position = 'fixed'
+  canvas.style.top = '-9999px'
+  canvas.style.left = '-9999px'
+  canvas.style.pointerEvents = 'none'
+  document.body.appendChild(canvas)
+  return canvas
 })()
 
 export function useGraphEditorActions({
   nodes,
+  nodeTypes,
   setNodes,
   setEdges,
   commit,
@@ -78,6 +91,8 @@ export function useGraphEditorActions({
   requestConfirm,
   reactFlowInstanceRef,
 }: UseGraphEditorActionsArgs) {
+  const isDraggingNewNodeRef = useRef(false)
+
   const onConnect = useCallback(
     (connection: Connection) => {
       commit()
@@ -115,13 +130,13 @@ export function useGraphEditorActions({
         id: crypto.randomUUID(),
         type: 'puzzleNode',
         position: { x: flowPos.x - 80, y: flowPos.y - 30 },
-        data: { label: 'Neuer Knoten', kind: 'puzzle' },
+        data: { label: 'Neuer Knoten', kind: nodeTypes[0]?.id ?? '' },
       }
       setNodes((nds) => [...nds, newNode])
       setSelectedEdgeId(null)
       setSelectedNodeId(newNode.id)
     },
-    [commit, setNodes, reactFlowInstanceRef, setSelectedEdgeId, setSelectedNodeId],
+    [commit, setNodes, reactFlowInstanceRef, setSelectedEdgeId, setSelectedNodeId, nodeTypes],
   )
 
   const handlePlacementClick = useCallback(
@@ -137,14 +152,27 @@ export function useGraphEditorActions({
     (event: React.DragEvent) => {
       event.dataTransfer.setData(NEW_NODE_DRAG_TYPE, 'puzzle')
       event.dataTransfer.effectAllowed = 'move'
-      if (transparentDragImage) event.dataTransfer.setDragImage(transparentDragImage, 0, 0)
-      handleStartPlacingNode()
+      try {
+        if (transparentDragImage) event.dataTransfer.setDragImage(transparentDragImage, 0, 0)
+      } catch {
+        // Cosmetic only: if the browser can't use our transparent drag image, it just
+        // falls back to its default drag thumbnail. Placement must still proceed.
+      }
+      // Chromium silently cancels the drag session if the DOM mutates
+      // synchronously while dragstart is still being dispatched (no
+      // dragenter/dragover/drop ever fires). Defer the state update that
+      // mounts the placement overlay until after the session is established.
+      isDraggingNewNodeRef.current = true
+      setTimeout(() => {
+        if (isDraggingNewNodeRef.current) handleStartPlacingNode()
+      }, 0)
     },
     [handleStartPlacingNode],
   )
 
   const handleNewNodeDragEnd = useCallback(
     (event: React.DragEvent) => {
+      isDraggingNewNodeRef.current = false
       if (event.dataTransfer.dropEffect === 'none') {
         setIsPlacingNode(false)
         setGhostScreenPos(null)
@@ -251,6 +279,18 @@ export function useGraphEditorActions({
       })
     },
     [selectedNodeId, commit, setNodes],
+  )
+
+  const handleJumpToGroup = useCallback(
+    (groupId: string) => {
+      const instance = reactFlowInstanceRef.current
+      if (!instance) return
+      setSelectedNodeId(null)
+      setSelectedEdgeId(null)
+      setSelectedGroupId(groupId)
+      instance.fitView({ nodes: [{ id: groupId }], padding: 0.3, duration: 450, maxZoom: 1.2 })
+    },
+    [reactFlowInstanceRef, setSelectedNodeId, setSelectedEdgeId, setSelectedGroupId],
   )
 
   const handleGroupSelectedNodes = useCallback(() => {
@@ -388,6 +428,11 @@ export function useGraphEditorActions({
       }
       if (node.id === connectSourceId) return
       commit()
+      const sourceNode = nodes.find((n) => n.id === connectSourceId)
+      const nodeById = new Map(nodes.map((n) => [n.id, n]))
+      const handles = sourceNode
+        ? computeNearestHandlePair(sourceNode, node, nodeById)
+        : { sourceHandle: 'bottom' as const, targetHandle: 'top' as const }
       const newEdgeId = crypto.randomUUID()
       setEdges((eds) =>
         addEdge<PuzzleFlowEdge>(
@@ -395,8 +440,8 @@ export function useGraphEditorActions({
             id: newEdgeId,
             source: connectSourceId,
             target: node.id,
-            sourceHandle: 'bottom',
-            targetHandle: 'top',
+            sourceHandle: handles.sourceHandle,
+            targetHandle: handles.targetHandle,
             type: 'smoothstep',
           },
           eds,
@@ -410,6 +455,7 @@ export function useGraphEditorActions({
     [
       connectMode,
       connectSourceId,
+      nodes,
       commit,
       setEdges,
       setSelectedNodeId,
@@ -503,6 +549,7 @@ export function useGraphEditorActions({
     handleAssignGroup,
     handleGroupSelectedNodes,
     handleToggleGroupVisibility,
+    handleJumpToGroup,
     performCascadeDeletion,
     handleGroupDelete,
     handleEdgeDataChange,
