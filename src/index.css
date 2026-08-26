@@ -780,6 +780,38 @@ button {
   border-color: var(--accent-border);
 }
 
+/* A fixed, click-through scrim behind the floating dialog. It only dims the
+   canvas for visual separation (so the dialog reads as a distinct layer,
+   not just another panel) - pointer-events stays none so the graph
+   underneath remains draggable/clickable while the dialog is open, matching
+   the non-modal, drag-anywhere design of the react-rnd window above it. */
+.description-dialog-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+  background: radial-gradient(ellipse 65% 55% at 50% 38%, transparent 0%, rgba(12, 9, 4, 0.28) 100%);
+  animation: description-dialog-scrim-in 220ms ease-out;
+}
+
+@keyframes description-dialog-scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes description-dialog-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .description-dialog {
   z-index: 1000;
   /* react-rnd sets an inline `display: inline-block` style on this same
@@ -791,10 +823,20 @@ button {
   display: flex !important;
   flex-direction: column !important;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   background: var(--bg-elevated);
-  box-shadow: var(--shadow);
+  /* Layer the theme's own elevation shadow with a soft accent-tinted glow and
+     a crisp 1px accent ring, so the window reads as a distinctly elevated,
+     "important" surface rather than just another bordered panel.
+     `transform` is intentionally left out of the entrance animation below -
+     react-rnd drives this element's position via an inline transform, and a
+     keyframe transform would fight it. */
+  box-shadow:
+    var(--shadow),
+    0 0 48px -12px var(--accent-bg),
+    0 0 0 1px var(--accent-border);
   overflow: hidden;
+  animation: description-dialog-in 180ms ease-out;
 }
 
 .description-dialog-header {
@@ -802,26 +844,40 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--accent-bg), transparent);
   cursor: move;
   flex-shrink: 0;
 }
 
 .description-dialog-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
+  letter-spacing: 0.3px;
   color: var(--text-h);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.description-dialog-header h2 span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.description-dialog-header-icon {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
 .description-dialog-body {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
 }
 
 .description-dialog .mdxeditor {
@@ -851,7 +907,6 @@ button {
 
 .description-dialog-editable {
   padding: 14px 16px;
-  min-height: 100%;
 }
 
 .color-picker {
@@ -1056,6 +1111,8 @@ button {
   font-family: var(--sans);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
   transition: box-shadow 0.15s ease;
+  width: 200px;
+  max-width: 200px;
 }
 
 .puzzle-node.is-selected {

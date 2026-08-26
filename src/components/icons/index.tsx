@@ -116,6 +116,16 @@ export function SaveIcon(props: IconProps) {
   )
 }
 
+export function NotesIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M6 3.5h9l3 3V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z" />
+      <path d="M14.5 3.5V7h3.5" />
+      <path d="M8 12h8M8 15.5h8M8 8.5h4" />
+    </Icon>
+  )
+}
+
 export function CompassIcon(props: IconProps) {
   return (
     <Icon {...props}>

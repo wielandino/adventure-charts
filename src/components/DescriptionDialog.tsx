@@ -19,7 +19,7 @@ import {
 } from '@mdxeditor/editor'
 import '@mdxeditor/editor/style.css'
 import { markdownPastePlugin } from './markdownPastePlugin'
-import { CloseIcon } from './icons'
+import { CloseIcon, NotesIcon } from './icons'
 import { useTheme } from '../theme/ThemeContext'
 import type { PuzzleFlowNode, PuzzleNodeData } from '../types'
 
@@ -66,53 +66,59 @@ export function DescriptionDialog({ node, onChange, onClose }: DescriptionDialog
   )
 
   return createPortal(
-    <Rnd
-      className="description-dialog"
-      default={{
-        x: Math.max(24, window.innerWidth / 2 - 480),
-        y: 64,
-        width: 960,
-        height: 680,
-      }}
-      minWidth={420}
-      minHeight={280}
-      bounds="window"
-      dragHandleClassName="description-dialog-header"
-      cancel=".description-dialog-close"
-      enableResizing
-    >
-      <div className="description-dialog-header">
-        <h2>{node.data.label || 'Knoten'} – Beschreibung</h2>
-        <button
-          type="button"
-          className="node-inspector-close description-dialog-close"
-          onClick={onClose}
-          title="Schließen"
-          aria-label="Schließen"
-        >
-          <CloseIcon size={16} />
-        </button>
-      </div>
-      <div className="description-dialog-body">
-        <MDXEditor
-          key={node.id}
-          markdown={node.data.notes ?? ''}
-          onChange={handleChange}
-          className={resolvedTheme === 'dark' ? 'dark-theme' : undefined}
-          contentEditableClassName="description-dialog-editable"
-          plugins={[
-            headingsPlugin(),
-            listsPlugin(),
-            quotePlugin(),
-            linkPlugin(),
-            linkDialogPlugin(),
-            thematicBreakPlugin(),
-            markdownPastePlugin(),
-            toolbarPlugin({ toolbarContents: () => <EditorToolbar /> }),
-          ]}
-        />
-      </div>
-    </Rnd>,
+    <>
+      <div className="description-dialog-scrim" />
+      <Rnd
+        className="description-dialog"
+        default={{
+          x: Math.max(24, window.innerWidth / 2 - 480),
+          y: 64,
+          width: 960,
+          height: 680,
+        }}
+        minWidth={420}
+        minHeight={280}
+        bounds="window"
+        dragHandleClassName="description-dialog-header"
+        cancel=".description-dialog-close"
+        enableResizing
+      >
+        <div className="description-dialog-header">
+          <h2>
+            <NotesIcon size={16} className="description-dialog-header-icon" />
+            <span>{node.data.label || 'Knoten'} – Beschreibung</span>
+          </h2>
+          <button
+            type="button"
+            className="node-inspector-close description-dialog-close"
+            onClick={onClose}
+            title="Schließen"
+            aria-label="Schließen"
+          >
+            <CloseIcon size={16} />
+          </button>
+        </div>
+        <div className="description-dialog-body">
+          <MDXEditor
+            key={node.id}
+            markdown={node.data.notes ?? ''}
+            onChange={handleChange}
+            className={resolvedTheme === 'dark' ? 'mdxeditor-full-height dark-theme' : 'mdxeditor-full-height'}
+            contentEditableClassName="description-dialog-editable"
+            plugins={[
+              headingsPlugin(),
+              listsPlugin(),
+              quotePlugin(),
+              linkPlugin(),
+              linkDialogPlugin(),
+              thematicBreakPlugin(),
+              markdownPastePlugin(),
+              toolbarPlugin({ toolbarContents: () => <EditorToolbar /> }),
+            ]}
+          />
+        </div>
+      </Rnd>
+    </>,
     document.body,
   )
 }

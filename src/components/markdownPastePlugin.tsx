@@ -4,11 +4,14 @@ import {
   $createLineBreakNode,
   $createParagraphNode,
   $createTextNode,
+  $getRoot,
   $getSelection,
   $isParagraphNode,
   $isRangeSelection,
   COMMAND_PRIORITY_HIGH,
+  KEY_BACKSPACE_COMMAND,
   PASTE_COMMAND,
+  RootNode,
   type LexicalNode,
 } from 'lexical'
 import { addComposerChild$, addExportVisitor$, addImportVisitor$, realmPlugin } from '@mdxeditor/editor'
@@ -91,10 +94,74 @@ function PlainTextPasteHandler() {
   return null
 }
 
+/**
+ * Lexical's default backspace handling always dispatches
+ * `DELETE_CHARACTER_COMMAND`, even when there is nothing left to delete. When
+ * the caret sits in the last remaining empty paragraph (the whole document is
+ * empty), `RangeSelection.deleteCharacter` walks out to the root - which
+ * counts as a shadow root - and, since the anchor paragraph `isEmpty()`,
+ * removes it. That leaves the root with zero children, which corrupts the
+ * editor's internal state badly enough that further typing stops working
+ * until the editor is remounted (see facebook/lexical#6570 and related
+ * "backspace in empty paragraph" issues - the expected behavior described
+ * there is that this keystroke should be a no-op). This intercepts backspace
+ * ahead of Lexical's own handler and swallows it in exactly that situation.
+ */
+function EmptyBackspaceGuard() {
+  const [editor] = useLexicalComposerContext()
+
+  useEffect(() => {
+    return editor.registerCommand(
+      KEY_BACKSPACE_COMMAND,
+      (event) => {
+        const selection = $getSelection()
+        if (!$isRangeSelection(selection) || !selection.isCollapsed()) return false
+
+        const root = $getRoot()
+        const onlyChild = root.getChildrenSize() === 1 ? root.getFirstChild() : null
+        if (!onlyChild || !$isParagraphNode(onlyChild) || onlyChild.getChildrenSize() !== 0) return false
+
+        event.preventDefault()
+        return true
+      },
+      COMMAND_PRIORITY_HIGH,
+    )
+  }, [editor])
+
+  return null
+}
+
+/**
+ * Backstop for `EmptyBackspaceGuard`: deletion can also reach the model via
+ * the native `beforeinput` (`deleteContentBackward`) pipeline, which Lexical
+ * handles independently of `KEY_BACKSPACE_COMMAND` (see `$handleBeforeInput`
+ * in lexical core) and which isn't reliably preventable by calling
+ * `preventDefault()` on the keydown event alone (Lexical's own source notes
+ * this breaks down at least on iOS). Whatever path empties the root, this
+ * transform runs synchronously within the same update - before anything is
+ * painted - and restores the "root always has at least one child" invariant
+ * that Lexical itself does not enforce for root/shadow-root nodes.
+ */
+function EmptyRootGuard() {
+  const [editor] = useLexicalComposerContext()
+
+  useEffect(() => {
+    return editor.registerNodeTransform(RootNode, (root) => {
+      if (root.getChildrenSize() === 0) {
+        const paragraph = $createParagraphNode()
+        root.append(paragraph)
+        paragraph.select()
+      }
+    })
+  }, [editor])
+
+  return null
+}
+
 export const markdownPastePlugin = realmPlugin({
   init(realm) {
     realm.pubIn({
-      [addComposerChild$]: PlainTextPasteHandler,
+      [addComposerChild$]: [PlainTextPasteHandler, EmptyBackspaceGuard, EmptyRootGuard],
       [addExportVisitor$]: EmptyParagraphExportVisitor,
       [addImportVisitor$]: EmptyParagraphImportVisitor,
     })
