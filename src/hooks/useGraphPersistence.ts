@@ -34,6 +34,7 @@ export function useGraphPersistence(
         setEdges(
           graph.edges.map((edge) => ({
             ...edge,
+            type: 'puzzleEdge',
             sourceHandle: edge.sourceHandle ?? 'bottom',
             targetHandle: edge.targetHandle ?? 'top',
           })),

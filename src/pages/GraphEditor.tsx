@@ -34,7 +34,7 @@ import { useGraphEditorActions } from '../hooks/useGraphEditorActions'
 import { useUndoRedoKeyboard } from '../hooks/useUndoRedoKeyboard'
 import { useGraphDerivedState } from '../hooks/useGraphDerivedState'
 import { useTypeConfig } from '../hooks/useTypeConfig'
-import { nodeTypes, defaultEdgeOptions, findNodeType, UNKNOWN_TYPE_COLOR } from '../utils/graphEditorVisuals'
+import { nodeTypes, edgeTypes, defaultEdgeOptions, findNodeType, UNKNOWN_TYPE_COLOR } from '../utils/graphEditorVisuals'
 import { isGroupNode, type AnyPuzzleNode, type PuzzleFlowEdge } from '../types'
 
 function GraphEditor() {
@@ -155,6 +155,7 @@ function GraphEditor() {
   } = useGraphDerivedState(nodes, edges, selectedNodeId, selectedEdgeId, selectedGroupId, resolvedTheme)
 
   const flowNodeTypes = useMemo(() => nodeTypes, [])
+  const flowEdgeTypes = useMemo(() => edgeTypes, [])
 
   if (loadState === 'loading' || !typeConfig) {
     return <CenteredMessage text="Graph wird geladen …" />
@@ -205,6 +206,7 @@ function GraphEditor() {
             nodes={nodes}
             edges={displayEdges}
             nodeTypes={flowNodeTypes}
+            edgeTypes={flowEdgeTypes}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}

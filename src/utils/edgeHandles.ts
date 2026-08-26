@@ -20,16 +20,20 @@ function resolveAbsoluteRect(node: AnyPuzzleNode, nodeById: Map<string, AnyPuzzl
   return { x, y, width, height }
 }
 
-function sideMidpoint(rect: { x: number; y: number; width: number; height: number }, side: HandleSide) {
+export function pointOnSide(
+  rect: { x: number; y: number; width: number; height: number },
+  side: HandleSide,
+  t: number = 0.5,
+) {
   switch (side) {
     case 'top':
-      return { x: rect.x + rect.width / 2, y: rect.y }
+      return { x: rect.x + rect.width * t, y: rect.y }
     case 'bottom':
-      return { x: rect.x + rect.width / 2, y: rect.y + rect.height }
+      return { x: rect.x + rect.width * t, y: rect.y + rect.height }
     case 'left':
-      return { x: rect.x, y: rect.y + rect.height / 2 }
+      return { x: rect.x, y: rect.y + rect.height * t }
     case 'right':
-      return { x: rect.x + rect.width, y: rect.y + rect.height / 2 }
+      return { x: rect.x + rect.width, y: rect.y + rect.height * t }
   }
 }
 
@@ -46,9 +50,9 @@ export function computeNearestHandlePair(
   let bestDistSq = Infinity
 
   for (const s of SIDES) {
-    const sp = sideMidpoint(sourceRect, s)
+    const sp = pointOnSide(sourceRect, s)
     for (const t of SIDES) {
-      const tp = sideMidpoint(targetRect, t)
+      const tp = pointOnSide(targetRect, t)
       const dx = sp.x - tp.x
       const dy = sp.y - tp.y
       const distSq = dx * dx + dy * dy

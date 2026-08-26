@@ -2,9 +2,11 @@ import { MarkerType } from '@xyflow/react'
 
 import { PuzzleNode } from '../components/PuzzleNode'
 import { GroupNode } from '../components/GroupNode'
+import { PuzzleEdge } from '../components/PuzzleEdge'
 import type { EdgeTypeDef, NodeTypeDef } from '../types'
 
 export const nodeTypes = { puzzleNode: PuzzleNode, groupNode: GroupNode }
+export const edgeTypes = { puzzleEdge: PuzzleEdge }
 
 export const defaultEdgeOptions = {
   markerEnd: { type: MarkerType.ArrowClosed },

@@ -97,7 +97,7 @@ export function useGraphEditorActions({
     (connection: Connection) => {
       commit()
       const newEdgeId = crypto.randomUUID()
-      setEdges((eds) => addEdge<PuzzleFlowEdge>({ ...connection, id: newEdgeId, type: 'smoothstep' }, eds))
+      setEdges((eds) => addEdge<PuzzleFlowEdge>({ ...connection, id: newEdgeId, type: 'puzzleEdge' }, eds))
       setSelectedNodeId(null)
       setSelectedEdgeId(newEdgeId)
     },
@@ -442,7 +442,7 @@ export function useGraphEditorActions({
             target: node.id,
             sourceHandle: handles.sourceHandle,
             targetHandle: handles.targetHandle,
-            type: 'smoothstep',
+            type: 'puzzleEdge',
           },
           eds,
         ),
