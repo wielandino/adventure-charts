@@ -24,7 +24,7 @@ function crossAxisValue(rect: ReturnType<typeof rectOf>, side: HandleSide) {
   return side === 'top' || side === 'bottom' ? rect.x + rect.width / 2 : rect.y + rect.height / 2
 }
 
-// Multiple edges can resolve to the same (node, side) — e.g. an edge ending on a node's
+// Multiple edges can resolve to the same (node, side) - e.g. an edge ending on a node's
 // right side and another edge starting from that same right side. Spread them evenly along
 // the side instead of letting them stack on the exact same pixel. A lone edge on a side still
 // gets t=0.5 (today's exact center), so this is a no-op for the common single-edge case.

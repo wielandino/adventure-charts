@@ -17,6 +17,7 @@ import { EdgeInspector } from '../components/EdgeInspector'
 import { GroupInspector } from '../components/GroupInspector'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { ManageTypesDialog } from '../components/ManageTypesDialog'
+import { HelpDialog } from '../components/HelpDialog'
 import { NodePlacementGhost } from '../components/NodePlacementGhost'
 import { EditorHeader } from '../components/EditorHeader'
 import { NodeToolbar } from '../components/NodeToolbar'
@@ -31,7 +32,7 @@ import { useGraphSelection } from '../hooks/useGraphSelection'
 import { useGraphPersistence } from '../hooks/useGraphPersistence'
 import { useConfirmDialog } from '../hooks/useConfirmDialog'
 import { useGraphEditorActions } from '../hooks/useGraphEditorActions'
-import { useUndoRedoKeyboard } from '../hooks/useUndoRedoKeyboard'
+import { useEditorKeyboardShortcuts } from '../hooks/useEditorKeyboardShortcuts'
 import { useGraphDerivedState } from '../hooks/useGraphDerivedState'
 import { useTypeConfig } from '../hooks/useTypeConfig'
 import { nodeTypes, edgeTypes, defaultEdgeOptions, findNodeType, UNKNOWN_TYPE_COLOR } from '../utils/graphEditorVisuals'
@@ -44,6 +45,7 @@ function GraphEditor() {
   const [nodes, setNodes, onNodesChange] = useNodesState<AnyPuzzleNode>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<PuzzleFlowEdge>([])
   const [isManageTypesOpen, setIsManageTypesOpen] = useState(false)
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
 
   const { typeConfig, saveTypeConfig } = useTypeConfig()
 
@@ -131,13 +133,17 @@ function GraphEditor() {
     reactFlowInstanceRef,
   })
 
-  useUndoRedoKeyboard(
+  const isAnyDialogOpen = isManageTypesOpen || isHelpOpen || isDescriptionDialogOpen || !!confirmRequest
+
+  useEditorKeyboardShortcuts(
     connectMode,
     isPlacingNode,
+    isAnyDialogOpen,
     setConnectMode,
     setConnectSourceId,
     setIsPlacingNode,
     setGhostScreenPos,
+    handleStartPlacingNode,
     undo,
     redo,
   )
@@ -181,6 +187,7 @@ function GraphEditor() {
         saveStatus={saveStatus}
         onSaveClick={handleSaveClick}
         onOpenManageTypes={() => setIsManageTypesOpen(true)}
+        onOpenHelp={() => setIsHelpOpen(true)}
         groups={groupNodes}
         groupMemberCounts={groupMemberCounts}
         onSelectGroup={handleJumpToGroup}
@@ -302,6 +309,7 @@ function GraphEditor() {
             onClose={() => setIsManageTypesOpen(false)}
           />
         )}
+        {isHelpOpen && <HelpDialog onClose={() => setIsHelpOpen(false)} />}
       </div>
     </div>
   )

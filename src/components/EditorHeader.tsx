@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 import { ThemeToggle } from './ThemeToggle'
 import { GroupNavMenu } from './GroupNavMenu'
-import { ArrowLeftIcon, SaveIcon, TagIcon, UnlinkIcon, WarningIcon } from './icons'
+import { ArrowLeftIcon, HelpIcon, SaveIcon, TagIcon, UnlinkIcon, WarningIcon } from './icons'
 import type { PuzzleGroupNode } from '../types'
 
 interface EditorHeaderProps {
@@ -13,6 +13,7 @@ interface EditorHeaderProps {
   saveStatus: 'idle' | 'saving' | 'saved'
   onSaveClick: () => void
   onOpenManageTypes: () => void
+  onOpenHelp: () => void
   groups: PuzzleGroupNode[]
   groupMemberCounts: Map<string, number>
   onSelectGroup: (groupId: string) => void
@@ -26,6 +27,7 @@ export function EditorHeader({
   saveStatus,
   onSaveClick,
   onOpenManageTypes,
+  onOpenHelp,
   groups,
   groupMemberCounts,
   onSelectGroup,
@@ -67,6 +69,9 @@ export function EditorHeader({
         <TagIcon size={18} />
       </button>
       <GroupNavMenu groups={groups} groupMemberCounts={groupMemberCounts} onSelectGroup={onSelectGroup} />
+      <button className="help-button" onClick={onOpenHelp} title="Hilfe" aria-label="Hilfe">
+        <HelpIcon size={18} />
+      </button>
       <ThemeToggle />
     </header>
   )

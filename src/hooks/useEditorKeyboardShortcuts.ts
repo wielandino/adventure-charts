@@ -6,13 +6,15 @@ function isInputElement(target: EventTarget | null): boolean {
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable
 }
 
-export function useUndoRedoKeyboard(
+export function useEditorKeyboardShortcuts(
   connectMode: boolean,
   isPlacingNode: boolean,
+  isAnyDialogOpen: boolean,
   setConnectMode: (active: boolean) => void,
   setConnectSourceId: (id: string | null) => void,
   setIsPlacingNode: (active: boolean) => void,
   setGhostScreenPos: (pos: { x: number; y: number } | null) => void,
+  onStartPlacingNode: () => void,
   undo: () => void,
   redo: () => void,
 ) {
@@ -30,6 +32,12 @@ export function useUndoRedoKeyboard(
         return
       }
       if (isInputElement(event.target)) return
+      if (event.altKey && !event.ctrlKey && !event.metaKey && event.key.toLowerCase() === 'n') {
+        if (isAnyDialogOpen) return
+        event.preventDefault()
+        onStartPlacingNode()
+        return
+      }
       const ctrlOrCmd = event.ctrlKey || event.metaKey
       if (!ctrlOrCmd) return
       const key = event.key.toLowerCase()
@@ -46,5 +54,16 @@ export function useUndoRedoKeyboard(
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [connectMode, isPlacingNode, setConnectMode, setConnectSourceId, setIsPlacingNode, setGhostScreenPos, undo, redo])
+  }, [
+    connectMode,
+    isPlacingNode,
+    isAnyDialogOpen,
+    setConnectMode,
+    setConnectSourceId,
+    setIsPlacingNode,
+    setGhostScreenPos,
+    onStartPlacingNode,
+    undo,
+    redo,
+  ])
 }

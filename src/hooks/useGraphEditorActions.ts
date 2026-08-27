@@ -58,7 +58,7 @@ const transparentDragImage = (() => {
   canvas.width = 1
   canvas.height = 1
   // Chrome requires the drag image element to actually be in the document
-  // (even off-screen) — an unattached canvas can abort the whole native
+  // (even off-screen) - an unattached canvas can abort the whole native
   // drag session instead of just falling back to the default thumbnail.
   canvas.style.position = 'fixed'
   canvas.style.top = '-9999px'

@@ -42,7 +42,7 @@ export function PuzzleNode({ id, data, selected }: NodeProps<PuzzleFlowNode>) {
         </span>
       )}
       {/* Each side carries both a source and a target handle stacked on the same spot, so a
-          connection can be dragged from or to any side — the drag direction (not the side)
+          connection can be dragged from or to any side - the drag direction (not the side)
           decides which node ends up as source vs. target. The non-interactive twin only
           participates in React Flow's drop-target proximity check. */}
       <Handle type="target" position={Position.Top} id="top" style={{ pointerEvents: 'none' }} />

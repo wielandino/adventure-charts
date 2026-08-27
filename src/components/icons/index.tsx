@@ -170,3 +170,23 @@ export function TagIcon(props: IconProps) {
     </Icon>
   )
 }
+
+export function HelpIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="9.25" />
+      <path d="M9.3 9.3a2.7 2.7 0 1 1 3.9 2.42c-.75.4-1.2.87-1.2 1.78v.3" />
+      <circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none" />
+    </Icon>
+  )
+}
+
+export function MouseClickIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="7" y="3" width="10" height="18" rx="5" />
+      <path d="M12 3v6" />
+      <rect x="7.8" y="3.8" width="3.4" height="5" rx="1.7" fill="currentColor" stroke="none" />
+    </Icon>
+  )
+}

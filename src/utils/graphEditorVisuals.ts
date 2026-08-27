@@ -30,7 +30,7 @@ export const statusDangerHex: Record<'light' | 'dark', string> = {
 }
 
 // React Flow builds each arrow marker's SVG id from this color string and references it via
-// `url(#id)` — a CSS var() (which contains parentheses) breaks that reference, so the edge line
+// `url(#id)` - a CSS var() (which contains parentheses) breaks that reference, so the edge line
 // color needs to be resolved to a literal hex per theme instead. Kept in sync with --edge-line
 // in src/index.css.
 export const edgeLineHex: Record<'light' | 'dark', string> = {
