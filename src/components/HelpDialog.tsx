@@ -83,6 +83,28 @@ const shortcuts: ShortcutRow[] = [
     description: 'Macht die letzte Änderung rückgängig.',
   },
   {
+    label: 'Kopieren',
+    keys: (
+      <>
+        <Kbd>Strg</Kbd>
+        <span className="help-plus">+</span>
+        <Kbd>C</Kbd>
+      </>
+    ),
+    description: 'Kopiert die ausgewählten Knoten (ohne Verbindungen).',
+  },
+  {
+    label: 'Einfügen',
+    keys: (
+      <>
+        <Kbd>Strg</Kbd>
+        <span className="help-plus">+</span>
+        <Kbd>V</Kbd>
+      </>
+    ),
+    description: 'Fügt die kopierten Knoten an der aktuellen Mausposition ein.',
+  },
+  {
     label: 'Löschen',
     keys: <Kbd>Entf</Kbd>,
     description: 'Löscht die ausgewählten Knoten oder Verbindungen.',

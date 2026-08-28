@@ -1,14 +1,15 @@
-import { useContext, type CSSProperties } from 'react'
+import { memo, useContext, type CSSProperties } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { ConnectModeContext } from '../context/ConnectModeContext'
 import { CycleWarningContext } from '../context/CycleWarningContext'
 import { IsolatedNodeContext } from '../context/IsolatedNodeContext'
 import { TypeConfigContext } from '../context/TypeConfigContext'
 import { findNodeType, UNKNOWN_TYPE_COLOR } from '../utils/graphEditorVisuals'
-import { UnlinkIcon, WarningIcon } from './icons'
+import { hasDescriptionContent } from '../utils/nodeDescription'
+import { NotesIcon, UnlinkIcon, WarningIcon } from './icons'
 import type { PuzzleFlowNode } from '../types'
 
-export function PuzzleNode({ id, data, selected }: NodeProps<PuzzleFlowNode>) {
+function PuzzleNodeImpl({ id, data, selected }: NodeProps<PuzzleFlowNode>) {
   const typeConfig = useContext(TypeConfigContext)
   const nodeType = typeConfig && findNodeType(typeConfig.nodeTypes, data.kind)
   const accent = data.color ?? nodeType?.color ?? UNKNOWN_TYPE_COLOR
@@ -41,6 +42,11 @@ export function PuzzleNode({ id, data, selected }: NodeProps<PuzzleFlowNode>) {
           <UnlinkIcon size={12} />
         </span>
       )}
+      {hasDescriptionContent(data.notes) && (
+        <span className="node-notes-badge" title="Beschreibung hinterlegt">
+          <NotesIcon size={12} />
+        </span>
+      )}
       {/* Each side carries both a source and a target handle stacked on the same spot, so a
           connection can be dragged from or to any side - the drag direction (not the side)
           decides which node ends up as source vs. target. The non-interactive twin only
@@ -59,3 +65,8 @@ export function PuzzleNode({ id, data, selected }: NodeProps<PuzzleFlowNode>) {
     </div>
   )
 }
+
+// React Flow gives unchanged nodes a stable object identity across setNodes, so
+// memo lets a single-node edit / drag skip re-rendering every other node body
+// (and its per-node hasDescriptionContent call). Context changes still re-render.
+export const PuzzleNode = memo(PuzzleNodeImpl)

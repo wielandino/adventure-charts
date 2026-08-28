@@ -1,9 +1,14 @@
+import { useEffect, useRef, useState } from 'react'
+
 import { ColorPicker } from './ColorPicker'
 import { FormField } from './FormField'
 import { DescriptionDialog } from './DescriptionDialog'
 import { CloseIcon, TrashIcon } from './icons'
 import { findNodeType, UNKNOWN_TYPE_COLOR } from '../utils/graphEditorVisuals'
+import { hasDescriptionContent } from '../utils/nodeDescription'
 import type { NodeTypeDef, PuzzleFlowNode, PuzzleGroupNode, PuzzleNodeData } from '../types'
+
+const FIELD_DEBOUNCE_MS = 300
 
 interface NodeInspectorProps {
   node: PuzzleFlowNode
@@ -34,6 +39,43 @@ export function NodeInspector({
   const currentType = findNodeType(nodeTypes, data.kind)
   const color = data.color ?? currentType?.color ?? UNKNOWN_TYPE_COLOR
 
+  // Free-text fields are edited against a local draft and pushed to graph state
+  // debounced, so a keystroke does not spawn a new nodes array (and a full canvas
+  // re-render + autosave tick) on every character. onBlur flushes immediately,
+  // which also covers clicking away or onto another node (blur fires first).
+  const [labelDraft, setLabelDraft] = useState(data.label)
+  const [descriptionDraft, setDescriptionDraft] = useState(data.description ?? '')
+  const labelTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const descriptionTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  useEffect(() => {
+    // Switched to a different node: drop any pending debounce and re-sync drafts.
+    clearTimeout(labelTimer.current)
+    clearTimeout(descriptionTimer.current)
+    setLabelDraft(data.label)
+    setDescriptionDraft(data.description ?? '')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [node.id])
+
+  const pushLabel = (value: string) => {
+    setLabelDraft(value)
+    clearTimeout(labelTimer.current)
+    labelTimer.current = setTimeout(() => onChange({ label: value }), FIELD_DEBOUNCE_MS)
+  }
+  const flushLabel = () => {
+    clearTimeout(labelTimer.current)
+    if (labelDraft !== data.label) onChange({ label: labelDraft })
+  }
+  const pushDescription = (value: string) => {
+    setDescriptionDraft(value)
+    clearTimeout(descriptionTimer.current)
+    descriptionTimer.current = setTimeout(() => onChange({ description: value }), FIELD_DEBOUNCE_MS)
+  }
+  const flushDescription = () => {
+    clearTimeout(descriptionTimer.current)
+    if (descriptionDraft !== (data.description ?? '')) onChange({ description: descriptionDraft })
+  }
+
   return (
     <aside className="node-inspector">
       <div className="node-inspector-header">
@@ -44,7 +86,12 @@ export function NodeInspector({
       </div>
 
       <FormField label="Name">
-        <input type="text" value={data.label} onChange={(e) => onChange({ label: e.target.value })} />
+        <input
+          type="text"
+          value={labelDraft}
+          onChange={(e) => pushLabel(e.target.value)}
+          onBlur={flushLabel}
+        />
       </FormField>
 
       <FormField label="Typ">
@@ -86,8 +133,9 @@ export function NodeInspector({
       <FormField label="Kurzbeschreibung">
         <textarea
           rows={4}
-          value={data.description ?? ''}
-          onChange={(e) => onChange({ description: e.target.value })}
+          value={descriptionDraft}
+          onChange={(e) => pushDescription(e.target.value)}
+          onBlur={flushDescription}
         />
       </FormField>
 
@@ -97,7 +145,7 @@ export function NodeInspector({
           className="node-inspector-notes-button"
           onClick={onOpenDescriptionDialog}
         >
-          {data.notes ? 'Beschreibung bearbeiten' : 'Beschreibung hinzufügen'}
+          {hasDescriptionContent(data.notes) ? 'Beschreibung bearbeiten' : 'Beschreibung hinzufügen'}
         </button>
       </FormField>
 

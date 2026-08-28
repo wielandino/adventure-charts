@@ -19,6 +19,7 @@ import {
 } from '@mdxeditor/editor'
 import '@mdxeditor/editor/style.css'
 import { markdownPastePlugin } from './markdownPastePlugin'
+import { hasDescriptionContent } from '../utils/nodeDescription'
 import { CloseIcon, NotesIcon } from './icons'
 import { useTheme } from '../theme/ThemeContext'
 import type { PuzzleFlowNode, PuzzleNodeData } from '../types'
@@ -50,19 +51,31 @@ function EditorToolbar() {
 export function DescriptionDialog({ node, onChange, onClose }: DescriptionDialogProps) {
   const { resolvedTheme } = useTheme()
   const debounceTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const pendingMarkdown = useRef<string | null>(null)
 
+  const commit = useCallback(
+    (markdown: string) => {
+      pendingMarkdown.current = null
+      onChange({ notes: hasDescriptionContent(markdown) ? markdown : '' })
+    },
+    [onChange],
+  )
+
+  // On close/unmount, flush a still-pending edit instead of dropping it.
   useEffect(() => {
-    return () => clearTimeout(debounceTimer.current)
-  }, [])
+    return () => {
+      clearTimeout(debounceTimer.current)
+      if (pendingMarkdown.current !== null) commit(pendingMarkdown.current)
+    }
+  }, [commit])
 
   const handleChange = useCallback(
     (markdown: string) => {
+      pendingMarkdown.current = markdown
       clearTimeout(debounceTimer.current)
-      debounceTimer.current = setTimeout(() => {
-        onChange({ notes: markdown })
-      }, DEBOUNCE_MS)
+      debounceTimer.current = setTimeout(() => commit(markdown), DEBOUNCE_MS)
     },
-    [onChange],
+    [commit],
   )
 
   return createPortal(
@@ -86,7 +99,7 @@ export function DescriptionDialog({ node, onChange, onClose }: DescriptionDialog
         <div className="description-dialog-header">
           <h2>
             <NotesIcon size={16} className="description-dialog-header-icon" />
-            <span>{node.data.label || 'Knoten'} – Beschreibung</span>
+            <span>{node.data.label || 'Knoten'} - Beschreibung</span>
           </h2>
           <button
             type="button"

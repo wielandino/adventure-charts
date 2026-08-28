@@ -4,13 +4,14 @@ import { ThemeToggle } from './ThemeToggle'
 import { GroupNavMenu } from './GroupNavMenu'
 import { ArrowLeftIcon, HelpIcon, SaveIcon, TagIcon, UnlinkIcon, WarningIcon } from './icons'
 import type { PuzzleGroupNode } from '../types'
+import type { SaveStatus } from '../hooks/useGraphPersistence'
 
 interface EditorHeaderProps {
   name: string
   onNameChange: (value: string) => void
   cycleCount: number
   isolatedCount: number
-  saveStatus: 'idle' | 'saving' | 'saved'
+  saveStatus: SaveStatus
   onSaveClick: () => void
   onOpenManageTypes: () => void
   onOpenHelp: () => void
@@ -53,8 +54,14 @@ export function EditorHeader({
           <UnlinkIcon size={14} /> {isolatedCount} Knoten ohne Verbindung
         </span>
       )}
-      <span className="save-status">
-        {saveStatus === 'saving' ? 'Speichert …' : saveStatus === 'saved' ? 'Gespeichert' : ''}
+      <span className={saveStatus === 'error' ? 'save-status save-status-error' : 'save-status'}>
+        {saveStatus === 'saving'
+          ? 'Speichert …'
+          : saveStatus === 'saved'
+            ? 'Gespeichert'
+            : saveStatus === 'error'
+              ? 'Nicht gespeichert - erneut versuchen'
+              : ''}
       </span>
       <button className="save-button" onClick={onSaveClick}>
         <SaveIcon size={16} />

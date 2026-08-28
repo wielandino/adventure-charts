@@ -17,6 +17,8 @@ export function useEditorKeyboardShortcuts(
   onStartPlacingNode: () => void,
   undo: () => void,
   redo: () => void,
+  onCopy: () => void,
+  onPaste: () => void,
 ) {
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -50,6 +52,11 @@ export function useEditorKeyboardShortcuts(
       } else if (key === 'y') {
         event.preventDefault()
         redo()
+      } else if (key === 'c' && !event.shiftKey && !event.altKey) {
+        onCopy()
+      } else if (key === 'v' && !event.shiftKey && !event.altKey) {
+        event.preventDefault()
+        onPaste()
       }
     }
     document.addEventListener('keydown', handleKeyDown)
@@ -65,5 +72,7 @@ export function useEditorKeyboardShortcuts(
     onStartPlacingNode,
     undo,
     redo,
+    onCopy,
+    onPaste,
   ])
 }

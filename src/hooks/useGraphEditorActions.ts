@@ -1,8 +1,16 @@
 import { useCallback, useRef } from 'react'
-import { addEdge, getNodesBounds, type Connection, type OnBeforeDelete, type ReactFlowInstance } from '@xyflow/react'
+import {
+  addEdge,
+  getNodesBounds,
+  type Connection,
+  type OnBeforeDelete,
+  type OnNodeDrag,
+  type ReactFlowInstance,
+} from '@xyflow/react'
 
 import { computeNearestHandlePair } from '../utils/edgeHandles'
 import {
+  findGroupAtPoint,
   GROUP_MIN_HEIGHT,
   GROUP_MIN_WIDTH,
   GROUP_PADDING,
@@ -45,12 +53,74 @@ interface UseGraphEditorActionsArgs {
   setConnectSourceId: (id: string | null) => void
   setIsPlacingNode: (active: boolean) => void
   setGhostScreenPos: (pos: { x: number; y: number } | null) => void
+  setDropTargetGroupId: (id: string | null) => void
   setIsDescriptionDialogOpen: (open: boolean) => void
   requestConfirm: (title: string, message: string) => Promise<boolean>
   reactFlowInstanceRef: React.RefObject<ReactFlowInstance<AnyPuzzleNode, PuzzleFlowEdge> | null>
 }
 
 const NEW_NODE_DRAG_TYPE = 'application/adventurechart-node'
+
+/**
+ * Pure reparenting math shared by the group <select> in the inspector and by
+ * drag-and-drop into a group. Resolves the node to an absolute position, then
+ * either detaches it (groupId === null) or attaches it to the target group,
+ * growing the group to contain it and re-offsetting existing members if the
+ * group origin moved.
+ */
+function assignNodeToGroup(
+  nds: AnyPuzzleNode[],
+  nodeId: string,
+  groupId: string | null,
+): AnyPuzzleNode[] {
+  const node = nds.find((n) => n.id === nodeId)
+  if (!node || !isPuzzleNode(node)) return nds
+  const oldParent = node.parentId ? nds.find((n) => n.id === node.parentId) : undefined
+  const newParent = groupId ? nds.find((n) => n.id === groupId) : undefined
+  const absolute = oldParent
+    ? { x: node.position.x + oldParent.position.x, y: node.position.y + oldParent.position.y }
+    : node.position
+
+  if (!groupId || !newParent || !isGroupNode(newParent)) {
+    return nds.map((n) =>
+      n.id === nodeId
+        ? { ...n, parentId: undefined, extent: undefined, expandParent: undefined, position: absolute }
+        : n,
+    )
+  }
+
+  const groupRect: Rect = {
+    x: newParent.position.x,
+    y: newParent.position.y,
+    width: newParent.width ?? GROUP_MIN_WIDTH,
+    height: newParent.height ?? GROUP_MIN_HEIGHT,
+  }
+  const nodeWidth = node.measured?.width ?? node.width ?? NODE_DEFAULT_WIDTH
+  const nodeHeight = node.measured?.height ?? node.height ?? NODE_DEFAULT_HEIGHT
+  const childRect = paddedRect(absolute.x, absolute.y, nodeWidth, nodeHeight, GROUP_PADDING)
+  const union = unionRect(groupRect, childRect)
+  const originMoved = union.x !== groupRect.x || union.y !== groupRect.y
+
+  return nds.map((n) => {
+    if (n.id === groupId) {
+      return { ...n, position: { x: union.x, y: union.y }, width: union.width, height: union.height }
+    }
+    if (n.id === nodeId) {
+      return {
+        ...n,
+        parentId: groupId,
+        extent: 'parent' as const,
+        expandParent: true,
+        position: { x: absolute.x - union.x, y: absolute.y - union.y },
+      }
+    }
+    if (originMoved && n.parentId === groupId) {
+      const childAbsolute = { x: n.position.x + groupRect.x, y: n.position.y + groupRect.y }
+      return { ...n, position: { x: childAbsolute.x - union.x, y: childAbsolute.y - union.y } }
+    }
+    return n
+  })
+}
 
 const transparentDragImage = (() => {
   if (typeof document === 'undefined') return null
@@ -87,11 +157,24 @@ export function useGraphEditorActions({
   setConnectSourceId,
   setIsPlacingNode,
   setGhostScreenPos,
+  setDropTargetGroupId,
   setIsDescriptionDialogOpen,
   requestConfirm,
   reactFlowInstanceRef,
 }: UseGraphEditorActionsArgs) {
   const isDraggingNewNodeRef = useRef(false)
+  const dropTargetGroupIdRef = useRef<string | null>(null)
+  const pointerScreenPosRef = useRef<{ x: number; y: number } | null>(null)
+  const clipboardRef = useRef<PuzzleFlowNode[]>([])
+
+  const syncDropTargetGroup = useCallback(
+    (nextId: string | null) => {
+      if (dropTargetGroupIdRef.current === nextId) return
+      dropTargetGroupIdRef.current = nextId
+      setDropTargetGroupId(nextId)
+    },
+    [setDropTargetGroupId],
+  )
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -110,14 +193,27 @@ export function useGraphEditorActions({
     setConnectMode(false)
     setConnectSourceId(null)
     setGhostScreenPos(null)
+    syncDropTargetGroup(null)
     setIsPlacingNode(true)
-  }, [setSelectedNodeId, setSelectedEdgeId, setConnectMode, setConnectSourceId, setGhostScreenPos, setIsPlacingNode])
+  }, [
+    setSelectedNodeId,
+    setSelectedEdgeId,
+    setConnectMode,
+    setConnectSourceId,
+    setGhostScreenPos,
+    syncDropTargetGroup,
+    setIsPlacingNode,
+  ])
 
   const handlePlacementMouseMove = useCallback(
     (event: React.MouseEvent) => {
       setGhostScreenPos({ x: event.clientX, y: event.clientY })
+      const instance = reactFlowInstanceRef.current
+      if (!instance) return
+      const flowPos = instance.screenToFlowPosition({ x: event.clientX, y: event.clientY })
+      syncDropTargetGroup(findGroupAtPoint(nodes.filter(isGroupNode), flowPos)?.id ?? null)
     },
-    [setGhostScreenPos],
+    [setGhostScreenPos, reactFlowInstanceRef, nodes, syncDropTargetGroup],
   )
 
   const createNodeAtScreenPos = useCallback(
@@ -132,11 +228,16 @@ export function useGraphEditorActions({
         position: { x: flowPos.x - 80, y: flowPos.y - 30 },
         data: { label: 'Neuer Knoten', kind: nodeTypes[0]?.id ?? '' },
       }
-      setNodes((nds) => [...nds, newNode])
+      setNodes((nds) => {
+        const withNode = [...nds, newNode]
+        const targetGroup = findGroupAtPoint(nds.filter(isGroupNode), flowPos)
+        return targetGroup ? assignNodeToGroup(withNode, newNode.id, targetGroup.id) : withNode
+      })
+      syncDropTargetGroup(null)
       setSelectedEdgeId(null)
       setSelectedNodeId(newNode.id)
     },
-    [commit, setNodes, reactFlowInstanceRef, setSelectedEdgeId, setSelectedNodeId, nodeTypes],
+    [commit, setNodes, reactFlowInstanceRef, syncDropTargetGroup, setSelectedEdgeId, setSelectedNodeId, nodeTypes],
   )
 
   const handlePlacementClick = useCallback(
@@ -176,9 +277,10 @@ export function useGraphEditorActions({
       if (event.dataTransfer.dropEffect === 'none') {
         setIsPlacingNode(false)
         setGhostScreenPos(null)
+        syncDropTargetGroup(null)
       }
     },
-    [setIsPlacingNode, setGhostScreenPos],
+    [setIsPlacingNode, setGhostScreenPos, syncDropTargetGroup],
   )
 
   const handlePaneDragOver = useCallback(
@@ -187,8 +289,12 @@ export function useGraphEditorActions({
       event.preventDefault()
       event.dataTransfer.dropEffect = 'move'
       setGhostScreenPos({ x: event.clientX, y: event.clientY })
+      const instance = reactFlowInstanceRef.current
+      if (!instance) return
+      const flowPos = instance.screenToFlowPosition({ x: event.clientX, y: event.clientY })
+      syncDropTargetGroup(findGroupAtPoint(nodes.filter(isGroupNode), flowPos)?.id ?? null)
     },
-    [setGhostScreenPos],
+    [setGhostScreenPos, reactFlowInstanceRef, nodes, syncDropTargetGroup],
   )
 
   const handlePaneDrop = useCallback(
@@ -228,58 +334,106 @@ export function useGraphEditorActions({
     (groupId: string | null) => {
       if (!selectedNodeId) return
       commit()
-      setNodes((nds) => {
-        const node = nds.find((n) => n.id === selectedNodeId)
-        if (!node || !isPuzzleNode(node)) return nds
-        const oldParent = node.parentId ? nds.find((n) => n.id === node.parentId) : undefined
-        const newParent = groupId ? nds.find((n) => n.id === groupId) : undefined
-        const absolute = oldParent
-          ? { x: node.position.x + oldParent.position.x, y: node.position.y + oldParent.position.y }
-          : node.position
-
-        if (!groupId || !newParent || !isGroupNode(newParent)) {
-          return nds.map((n) =>
-            n.id === selectedNodeId
-              ? { ...n, parentId: undefined, extent: undefined, expandParent: undefined, position: absolute }
-              : n,
-          )
-        }
-
-        const groupRect: Rect = {
-          x: newParent.position.x,
-          y: newParent.position.y,
-          width: newParent.width ?? GROUP_MIN_WIDTH,
-          height: newParent.height ?? GROUP_MIN_HEIGHT,
-        }
-        const nodeWidth = node.measured?.width ?? node.width ?? NODE_DEFAULT_WIDTH
-        const nodeHeight = node.measured?.height ?? node.height ?? NODE_DEFAULT_HEIGHT
-        const childRect = paddedRect(absolute.x, absolute.y, nodeWidth, nodeHeight, GROUP_PADDING)
-        const union = unionRect(groupRect, childRect)
-        const originMoved = union.x !== groupRect.x || union.y !== groupRect.y
-
-        return nds.map((n) => {
-          if (n.id === groupId) {
-            return { ...n, position: { x: union.x, y: union.y }, width: union.width, height: union.height }
-          }
-          if (n.id === selectedNodeId) {
-            return {
-              ...n,
-              parentId: groupId,
-              extent: 'parent' as const,
-              expandParent: true,
-              position: { x: absolute.x - union.x, y: absolute.y - union.y },
-            }
-          }
-          if (originMoved && n.parentId === groupId) {
-            const childAbsolute = { x: n.position.x + groupRect.x, y: n.position.y + groupRect.y }
-            return { ...n, position: { x: childAbsolute.x - union.x, y: childAbsolute.y - union.y } }
-          }
-          return n
-        })
-      })
+      setNodes((nds) => assignNodeToGroup(nds, selectedNodeId, groupId))
     },
     [selectedNodeId, commit, setNodes],
   )
+
+  const handleNodeDrag = useCallback<OnNodeDrag<AnyPuzzleNode>>(
+    (_event, node) => {
+      if (!isPuzzleNode(node) || node.parentId) {
+        syncDropTargetGroup(null)
+        return
+      }
+      const width = node.measured?.width ?? node.width ?? NODE_DEFAULT_WIDTH
+      const height = node.measured?.height ?? node.height ?? NODE_DEFAULT_HEIGHT
+      const center = { x: node.position.x + width / 2, y: node.position.y + height / 2 }
+      const target = findGroupAtPoint(nodes.filter(isGroupNode), center)
+      syncDropTargetGroup(target?.id ?? null)
+    },
+    [nodes, syncDropTargetGroup],
+  )
+
+  const handleNodeDragStop = useCallback<OnNodeDrag<AnyPuzzleNode>>(
+    (_event, node) => {
+      const targetId = dropTargetGroupIdRef.current
+      syncDropTargetGroup(null)
+      if (!targetId || !isPuzzleNode(node) || node.parentId) return
+      setNodes((nds) => assignNodeToGroup(nds, node.id, targetId))
+    },
+    [setNodes, syncDropTargetGroup],
+  )
+
+  const handleCanvasPointerMove = useCallback((event: React.MouseEvent) => {
+    pointerScreenPosRef.current = { x: event.clientX, y: event.clientY }
+  }, [])
+
+  const handleCopy = useCallback(() => {
+    let selected = nodes.filter((n): n is PuzzleFlowNode => isPuzzleNode(n) && !!n.selected)
+    if (selected.length === 0 && selectedNodeId) {
+      const one = nodes.find((n) => n.id === selectedNodeId)
+      if (one && isPuzzleNode(one)) selected = [one]
+    }
+    if (selected.length === 0) {
+      clipboardRef.current = []
+      return
+    }
+    const nodeById = new Map(nodes.map((n) => [n.id, n]))
+    clipboardRef.current = selected.map((n) => {
+      const parent = n.parentId ? nodeById.get(n.parentId) : undefined
+      const absolute = parent
+        ? { x: n.position.x + parent.position.x, y: n.position.y + parent.position.y }
+        : { ...n.position }
+      return {
+        ...n,
+        position: absolute,
+        data: { ...n.data },
+        parentId: undefined,
+        extent: undefined,
+        expandParent: undefined,
+        selected: false,
+        dragging: false,
+      }
+    })
+  }, [nodes, selectedNodeId])
+
+  const handlePaste = useCallback(() => {
+    const clip = clipboardRef.current
+    if (clip.length === 0) return
+    commit()
+
+    const widthOf = (n: PuzzleFlowNode) => n.measured?.width ?? n.width ?? NODE_DEFAULT_WIDTH
+    const heightOf = (n: PuzzleFlowNode) => n.measured?.height ?? n.height ?? NODE_DEFAULT_HEIGHT
+    const minX = Math.min(...clip.map((n) => n.position.x))
+    const minY = Math.min(...clip.map((n) => n.position.y))
+    const maxX = Math.max(...clip.map((n) => n.position.x + widthOf(n)))
+    const maxY = Math.max(...clip.map((n) => n.position.y + heightOf(n)))
+    const center = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }
+
+    let offset = { x: 40, y: 40 }
+    const instance = reactFlowInstanceRef.current
+    if (instance && pointerScreenPosRef.current) {
+      const target = instance.screenToFlowPosition(pointerScreenPosRef.current)
+      offset = { x: target.x - center.x, y: target.y - center.y }
+    }
+
+    const pasted: PuzzleFlowNode[] = clip.map((n) => ({
+      ...n,
+      id: crypto.randomUUID(),
+      position: { x: n.position.x + offset.x, y: n.position.y + offset.y },
+      data: { ...n.data },
+      parentId: undefined,
+      extent: undefined,
+      expandParent: undefined,
+      selected: true,
+      dragging: false,
+    }))
+
+    setNodes((nds) => [...nds.map((n) => (n.selected ? { ...n, selected: false } : n)), ...pasted])
+    setSelectedEdgeId(null)
+    setSelectedGroupId(null)
+    setSelectedNodeId(pasted.length === 1 ? pasted[0].id : null)
+  }, [commit, setNodes, reactFlowInstanceRef, setSelectedEdgeId, setSelectedGroupId, setSelectedNodeId])
 
   const handleJumpToGroup = useCallback(
     (groupId: string) => {
@@ -561,6 +715,11 @@ export function useGraphEditorActions({
     handleNodeDelete,
     handleEdgeDelete,
     handleNodeDragStart,
+    handleNodeDrag,
+    handleNodeDragStop,
+    handleCanvasPointerMove,
+    handleCopy,
+    handlePaste,
     handleBeforeDelete,
   }
 }

@@ -10,6 +10,7 @@ export function useGraphSelection(nodes: AnyPuzzleNode[], edges: PuzzleFlowEdge[
   const [connectSourceId, setConnectSourceId] = useState<string | null>(null)
   const [isPlacingNode, setIsPlacingNode] = useState(false)
   const [ghostScreenPos, setGhostScreenPos] = useState<{ x: number; y: number } | null>(null)
+  const [dropTargetGroupId, setDropTargetGroupId] = useState<string | null>(null)
   const [isDescriptionDialogOpen, setIsDescriptionDialogOpen] = useState(false)
 
   useEffect(() => {
@@ -51,6 +52,8 @@ export function useGraphSelection(nodes: AnyPuzzleNode[], edges: PuzzleFlowEdge[
     setIsPlacingNode,
     ghostScreenPos,
     setGhostScreenPos,
+    dropTargetGroupId,
+    setDropTargetGroupId,
     isDescriptionDialogOpen,
     setIsDescriptionDialogOpen,
   }

@@ -1,4 +1,4 @@
-import { useContext, type CSSProperties } from 'react'
+import { memo, useContext, type CSSProperties } from 'react'
 import { NodeResizer, type NodeProps } from '@xyflow/react'
 import { GroupActionsContext } from '../context/GroupActionsContext'
 import { EyeIcon, EyeOffIcon } from './icons'
@@ -7,12 +7,18 @@ import type { PuzzleGroupNode } from '../types'
 
 const DEFAULT_GROUP_ACCENT = 'var(--border-strong)'
 
-export function GroupNode({ id, data, selected, width, height }: NodeProps<PuzzleGroupNode>) {
+function GroupNodeImpl({ id, data, selected, width, height }: NodeProps<PuzzleGroupNode>) {
   const accent = data.color ?? DEFAULT_GROUP_ACCENT
   const isHidden = !!data.hidden
-  const { onToggleVisibility } = useContext(GroupActionsContext)
+  const { onToggleVisibility, dropTargetGroupId } = useContext(GroupActionsContext)
+  const isDropTarget = dropTargetGroupId === id
 
-  const classNames = ['group-node', selected && 'is-selected', isHidden && 'is-hidden']
+  const classNames = [
+    'group-node',
+    selected && 'is-selected',
+    isHidden && 'is-hidden',
+    isDropTarget && 'is-drop-target',
+  ]
     .filter(Boolean)
     .join(' ')
 
@@ -42,3 +48,5 @@ export function GroupNode({ id, data, selected, width, height }: NodeProps<Puzzl
     </div>
   )
 }
+
+export const GroupNode = memo(GroupNodeImpl)

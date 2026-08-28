@@ -74,6 +74,8 @@ function GraphEditor() {
     setIsPlacingNode,
     ghostScreenPos,
     setGhostScreenPos,
+    dropTargetGroupId,
+    setDropTargetGroupId,
     isDescriptionDialogOpen,
     setIsDescriptionDialogOpen,
   } = useGraphSelection(nodes, edges)
@@ -107,6 +109,11 @@ function GraphEditor() {
     handleNodeDelete,
     handleEdgeDelete,
     handleNodeDragStart,
+    handleNodeDrag,
+    handleNodeDragStop,
+    handleCanvasPointerMove,
+    handleCopy,
+    handlePaste,
     handleBeforeDelete,
   } = useGraphEditorActions({
     nodes,
@@ -128,6 +135,7 @@ function GraphEditor() {
     setConnectSourceId,
     setIsPlacingNode,
     setGhostScreenPos,
+    setDropTargetGroupId,
     setIsDescriptionDialogOpen,
     requestConfirm,
     reactFlowInstanceRef,
@@ -146,6 +154,8 @@ function GraphEditor() {
     handleStartPlacingNode,
     undo,
     redo,
+    handleCopy,
+    handlePaste,
   )
 
   const {
@@ -192,7 +202,7 @@ function GraphEditor() {
         groupMemberCounts={groupMemberCounts}
         onSelectGroup={handleJumpToGroup}
       />
-      <div className="editor-canvas">
+      <div className="editor-canvas" onMouseMove={handleCanvasPointerMove}>
         <NodeToolbar
           isPlacingNode={isPlacingNode}
           onStartPlacingNode={handleStartPlacingNode}
@@ -208,7 +218,7 @@ function GraphEditor() {
         <ConnectModeContext.Provider value={connectMode ? connectSourceId : null}>
          <CycleWarningContext.Provider value={cycleNodeIds}>
          <IsolatedNodeContext.Provider value={isolatedNodeIds}>
-         <GroupActionsContext.Provider value={{ onToggleVisibility: handleToggleGroupVisibility }}>
+         <GroupActionsContext.Provider value={{ onToggleVisibility: handleToggleGroupVisibility, dropTargetGroupId }}>
           <ReactFlow
             nodes={nodes}
             edges={displayEdges}
@@ -222,6 +232,8 @@ function GraphEditor() {
             onEdgeClick={handleEdgeClick}
             onPaneClick={handlePaneClick}
             onNodeDragStart={handleNodeDragStart}
+            onNodeDrag={handleNodeDrag}
+            onNodeDragStop={handleNodeDragStop}
             onBeforeDelete={handleBeforeDelete}
             onDragOver={handlePaneDragOver}
             onDrop={handlePaneDrop}
