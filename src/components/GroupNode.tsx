@@ -1,6 +1,7 @@
 import { memo, useContext, type CSSProperties } from 'react'
 import { NodeResizer, type NodeProps } from '@xyflow/react'
 import { GroupActionsContext } from '../context/GroupActionsContext'
+import { NodeResizeContext } from '../context/NodeResizeContext'
 import { EyeIcon, EyeOffIcon } from './icons'
 import { GROUP_MIN_HEIGHT, GROUP_MIN_WIDTH } from '../utils/groupLayout'
 import type { PuzzleGroupNode } from '../types'
@@ -12,6 +13,7 @@ function GroupNodeImpl({ id, data, selected, width, height }: NodeProps<PuzzleGr
   const isHidden = !!data.hidden
   const { onToggleVisibility, dropTargetGroupId } = useContext(GroupActionsContext)
   const isDropTarget = dropTargetGroupId === id
+  const beginResize = useContext(NodeResizeContext)
 
   const classNames = [
     'group-node',
@@ -29,6 +31,7 @@ function GroupNodeImpl({ id, data, selected, width, height }: NodeProps<PuzzleGr
         minWidth={GROUP_MIN_WIDTH}
         minHeight={GROUP_MIN_HEIGHT}
         color={accent}
+        onResizeStart={beginResize}
       />
       <div className="group-node-header">
         <span className="group-node-label">{data.label || 'Neue Gruppe'}</span>

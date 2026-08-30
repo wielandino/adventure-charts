@@ -1,10 +1,30 @@
 import type { PuzzleGroupNode } from '../types'
 
 export const GROUP_PADDING = 40
-export const NODE_DEFAULT_WIDTH = 168
-export const NODE_DEFAULT_HEIGHT = 80
+export const NODE_DEFAULT_WIDTH = 200
+// Kind + label rows + card chrome; no room for a description line.
+export const NODE_DEFAULT_HEIGHT = 84
+// Rendered line-height of `.puzzle-node-description`. Used to work out how many
+// description lines fit in a given node height (see PuzzleNode).
+export const DESC_LINE_HEIGHT = 26
+// One description line on top of NODE_DEFAULT_HEIGHT, so a node with a
+// Kurzbeschreibung shows it on a single line by default (the rest is clamped
+// with an ellipsis until the node is dragged taller).
+export const NODE_ONELINE_HEIGHT = NODE_DEFAULT_HEIGHT + DESC_LINE_HEIGHT + 2
+export const NODE_MIN_WIDTH = 160
+// Enough that the node name is never cut off when dragged to the minimum.
+export const NODE_MIN_HEIGHT = 84
 export const GROUP_MIN_WIDTH = 200
 export const GROUP_MIN_HEIGHT = 140
+
+/**
+ * Starting height for a puzzle node created now or migrated from a graph saved
+ * before nodes had explicit heights. Just tall enough for one description line;
+ * the user drags the node taller to reveal more of the text.
+ */
+export function initialNodeHeight(description?: string | null): number {
+  return description && description.trim() ? NODE_ONELINE_HEIGHT : NODE_DEFAULT_HEIGHT
+}
 
 export interface Rect {
   x: number

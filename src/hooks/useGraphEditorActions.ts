@@ -16,6 +16,7 @@ import {
   GROUP_PADDING,
   NODE_DEFAULT_HEIGHT,
   NODE_DEFAULT_WIDTH,
+  NODE_ONELINE_HEIGHT,
   paddedRect,
   unionRect,
   type Rect,
@@ -225,7 +226,9 @@ export function useGraphEditorActions({
       const newNode: PuzzleFlowNode = {
         id: crypto.randomUUID(),
         type: 'puzzleNode',
-        position: { x: flowPos.x - 80, y: flowPos.y - 30 },
+        position: { x: flowPos.x - NODE_DEFAULT_WIDTH / 2, y: flowPos.y - NODE_DEFAULT_HEIGHT / 2 },
+        width: NODE_DEFAULT_WIDTH,
+        height: NODE_DEFAULT_HEIGHT,
         data: { label: 'Neuer Knoten', kind: nodeTypes[0]?.id ?? '' },
       }
       setNodes((nds) => {
@@ -313,7 +316,22 @@ export function useGraphEditorActions({
       if (!selectedNodeId) return
       commitDebounced()
       setNodes((nds) =>
-        nds.map((n) => (n.id === selectedNodeId && isPuzzleNode(n) ? { ...n, data: { ...n.data, ...patch } } : n)),
+        nds.map((n) => {
+          if (n.id !== selectedNodeId || !isPuzzleNode(n)) return n
+          const data = { ...n.data, ...patch }
+          // Nudge the height by one line when a Kurzbeschreibung first appears /
+          // disappears, but only while it's still at its default - a node the
+          // user has resized keeps its height. From there the user drags the
+          // node taller to reveal more of the text (PuzzleNode clamps the rest).
+          let height = n.height
+          if ('description' in patch) {
+            const had = !!(n.data.description ?? '').trim()
+            const has = !!(data.description ?? '').trim()
+            if (has && !had && n.height === NODE_DEFAULT_HEIGHT) height = NODE_ONELINE_HEIGHT
+            else if (!has && had && n.height === NODE_ONELINE_HEIGHT) height = NODE_DEFAULT_HEIGHT
+          }
+          return { ...n, data, height }
+        }),
       )
     },
     [selectedNodeId, commitDebounced, setNodes],
@@ -421,6 +439,8 @@ export function useGraphEditorActions({
       ...n,
       id: crypto.randomUUID(),
       position: { x: n.position.x + offset.x, y: n.position.y + offset.y },
+      width: n.width ?? NODE_DEFAULT_WIDTH,
+      height: n.height ?? NODE_DEFAULT_HEIGHT,
       data: { ...n.data },
       parentId: undefined,
       extent: undefined,

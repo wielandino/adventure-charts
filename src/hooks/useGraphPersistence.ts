@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { getGraph, patchGraph } from '../api/graphs'
 import type { AnyPuzzleNode, GraphPatch, PuzzleFlowEdge, SerializedEdge, SerializedNode } from '../types'
+import { isPuzzleNode } from '../types'
+import { initialNodeHeight, NODE_DEFAULT_WIDTH } from '../utils/groupLayout'
 import { serializeEdge, serializeNode, stableStringify } from '../utils/serializeGraph'
 
 export type LoadState = 'loading' | 'ready' | 'not-found'
@@ -180,13 +182,30 @@ export function useGraphPersistence(
           sourceHandle: edge.sourceHandle ?? 'bottom',
           targetHandle: edge.targetHandle ?? 'top',
         }))
+        // A puzzle node without explicit width/height renders as visibility:hidden
+        // until React Flow measures it, and its `width:100%` body collapses in
+        // that window (Chromium does not reliably re-resolve it afterwards).
+        // Give every legacy node a concrete size on load so it renders on the
+        // first paint; one line taller when it carries a description.
+        const loadedNodes: AnyPuzzleNode[] = graph.nodes.map((node) => {
+          if (!isPuzzleNode(node) || (node.width !== undefined && node.height !== undefined)) {
+            return node
+          }
+          return {
+            ...node,
+            width: node.width ?? NODE_DEFAULT_WIDTH,
+            height: node.height ?? initialNodeHeight(node.data.description as string | undefined),
+          }
+        })
         setName(graph.name)
-        setNodes(graph.nodes)
+        setNodes(loadedNodes)
         setEdges(loadedEdges)
         // Seed the "last persisted" snapshot so the first autosave tick (and the
-        // node-measurement churn right after mount) diffs clean.
+        // node-measurement churn right after mount) diffs clean. Seeded from the
+        // migrated nodes so the backfilled size is not itself treated as a change
+        // - it persists lazily on the next real edit.
         lastName.current = graph.name
-        lastNodes.current = indexById(graph.nodes, serializeNode)
+        lastNodes.current = indexById(loadedNodes, serializeNode)
         lastEdges.current = indexById(loadedEdges, serializeEdge)
         setLoadState('ready')
       })

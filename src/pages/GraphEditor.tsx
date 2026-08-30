@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   ReactFlow,
@@ -26,6 +26,7 @@ import { ConnectModeContext } from '../context/ConnectModeContext'
 import { CycleWarningContext } from '../context/CycleWarningContext'
 import { IsolatedNodeContext } from '../context/IsolatedNodeContext'
 import { GroupActionsContext } from '../context/GroupActionsContext'
+import { NodeResizeContext } from '../context/NodeResizeContext'
 import { TypeConfigContext } from '../context/TypeConfigContext'
 import { useGraphHistory } from '../hooks/useGraphHistory'
 import { useGraphSelection } from '../hooks/useGraphSelection'
@@ -81,6 +82,15 @@ function GraphEditor() {
   } = useGraphSelection(nodes, edges)
 
   const { commit, commitDebounced, undo, redo } = useGraphHistory(nodes, edges, setNodes, setEdges)
+
+  // Snapshot the pre-resize state when a node/group resize gesture starts. Kept as
+  // a stable callback (commit is recreated every render) so the context value does
+  // not force every memoized node body to re-render.
+  const commitRef = useRef(commit)
+  useEffect(() => {
+    commitRef.current = commit
+  }, [commit])
+  const handleResizeStart = useCallback(() => commitRef.current(), [])
 
   const { confirmRequest, requestConfirm, resolveConfirm } = useConfirmDialog()
 
@@ -215,6 +225,7 @@ function GraphEditor() {
           onGroupSelectedNodes={handleGroupSelectedNodes}
         />
         <TypeConfigContext.Provider value={typeConfig}>
+        <NodeResizeContext.Provider value={handleResizeStart}>
         <ConnectModeContext.Provider value={connectMode ? connectSourceId : null}>
          <CycleWarningContext.Provider value={cycleNodeIds}>
          <IsolatedNodeContext.Provider value={isolatedNodeIds}>
@@ -262,6 +273,7 @@ function GraphEditor() {
          </IsolatedNodeContext.Provider>
          </CycleWarningContext.Provider>
         </ConnectModeContext.Provider>
+        </NodeResizeContext.Provider>
         </TypeConfigContext.Provider>
         {isPlacingNode && (
           <div

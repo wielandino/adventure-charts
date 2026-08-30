@@ -1074,8 +1074,8 @@ button {
 .node-cycle-badge,
 .node-isolated-badge {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: 8px;
+  right: 8px;
   width: 20px;
   height: 20px;
   display: flex;
@@ -1097,8 +1097,8 @@ button {
 
 .node-notes-badge {
   position: absolute;
-  bottom: -8px;
-  right: -8px;
+  bottom: 8px;
+  right: 8px;
   width: 20px;
   height: 20px;
   display: flex;
@@ -1123,10 +1123,22 @@ button {
 
 /* Puzzle node */
 
+/* Default width for nodes that have never been resized; React Flow writes an
+   inline width/height on the wrapper once the NodeResizer is used, overriding it. */
+.react-flow__node-puzzleNode {
+  width: 200px;
+}
+
 .puzzle-node {
   --node-accent: var(--border-strong);
   position: relative;
-  min-width: 168px;
+  box-sizing: border-box;
+  width: 100%;
+  /* node.height is applied inline as `min-height`, and the card grows past it
+     (flex column, height: auto) when the name wraps to more lines. */
+  height: auto;
+  display: flex;
+  flex-direction: column;
   padding: 11px 15px;
   border-radius: var(--radius-sm);
   border: 1.5px solid var(--node-accent);
@@ -1135,8 +1147,15 @@ button {
   font-family: var(--sans);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
   transition: box-shadow 0.15s ease;
-  width: 200px;
-  max-width: 200px;
+}
+
+/* Takes the leftover height; clips anything past the node border. */
+.puzzle-node-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .puzzle-node.is-selected {
@@ -1169,12 +1188,21 @@ button {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-h);
+  overflow-wrap: anywhere;
 }
 
 .puzzle-node-description {
   font-size: 12px;
   color: var(--text);
   margin-top: 4px;
+  overflow-wrap: anywhere;
+  overflow: hidden;
+  /* Exactly `descLines` lines tall (raised by PuzzleNode as the node grows);
+     extra text ends with an ellipsis. Not `flex: 1` - it must not stretch, so
+     the card's `height: auto` reflects the real content height. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
 }
 
 @keyframes pulse-ring-danger {
@@ -1549,14 +1577,21 @@ button {
 }
 
 .react-flow__resize-control.react-flow__resize-control.handle {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
   border: 2px solid var(--bg-elevated);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .react-flow__resize-control.react-flow__resize-control.handle:hover {
   filter: brightness(1.15);
+}
+
+/* Make the draggable edges of the resizer visible, not just the corner dots. */
+.react-flow__resize-control.react-flow__resize-control.line {
+  border-color: color-mix(in srgb, var(--node-accent, var(--accent-secondary)) 45%, transparent);
+  border-width: 1.5px;
 }
 
 .react-flow__selection {
